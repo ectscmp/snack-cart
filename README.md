@@ -16,8 +16,8 @@ built-in `node:sqlite`.
   delivery, and track order status.
 - **THM staff** manage products and stock with an audit trail, then work a
   delivery queue grouped by room.
-- **Admins** create classes and rooms, assign people to classes, grant staff or
-  admin roles, set recurring weekly ordering windows per class, and pause
+- **Admins** create classes and optional rooms, assign people to classes, grant
+  staff or admin roles, set recurring weekly ordering windows per class, and pause
   ordering globally.
 
 ## Roles

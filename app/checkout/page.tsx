@@ -55,7 +55,7 @@ async function CheckoutContent() {
 
   const status = getOrderingStatus(user);
   const settings = getSettings();
-  const defaultRoom = user.classRoom ?? user.room ?? "";
+  const defaultRoom = user.classRoom || user.room || "";
 
   if (!status.open) {
     return (

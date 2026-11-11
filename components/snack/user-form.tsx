@@ -44,7 +44,8 @@ export function UserForm({
           <option value="">No class</option>
           {classes.map((entry) => (
             <option key={entry.id} value={entry.id}>
-              {entry.name} · Room {entry.room}
+              {entry.name}
+              {entry.room ? ` · Room ${entry.room}` : ""}
             </option>
           ))}
         </select>

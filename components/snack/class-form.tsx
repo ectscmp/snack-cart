@@ -42,15 +42,18 @@ export function ClassForm({ classRecord }: { classRecord?: ClassRecord }) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor={`class-room-${key}`}>Room</Label>
+          <Label htmlFor={`class-room-${key}`}>Room (optional)</Label>
           <Input
             id={`class-room-${key}`}
             name="room"
             defaultValue={classRecord?.room}
             placeholder="204"
-            required
             maxLength={40}
           />
+          <p className="text-xs text-muted-foreground">
+            Used as the default delivery room. Leave blank if this class does
+            not have one.
+          </p>
         </div>
         <div className="space-y-2">
           <Label htmlFor={`class-grade-${key}`}>Grade level</Label>

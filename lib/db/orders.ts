@@ -528,7 +528,7 @@ export function getClassPickList(classId: number): ClassPickList | null {
   return {
     classId,
     className: orders[0].className ?? classRow?.name ?? `Class ${classId}`,
-    room: classRow?.room ?? orders[0].deliveryRoom,
+    room: classRow?.room || orders[0].deliveryRoom,
     items: Array.from(totals, ([productName, quantity]) => ({
       productName,
       quantity,

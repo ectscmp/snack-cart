@@ -126,7 +126,7 @@ export function findClassByEntraGroups(
 export function createClass(input: {
   name: string;
   gradeLevel?: string | null;
-  room: string;
+  room?: string;
   teacherName?: string | null;
   entraGroupId?: string | null;
   active?: boolean;
@@ -139,7 +139,7 @@ export function createClass(input: {
     .run(
       input.name,
       input.gradeLevel ?? null,
-      input.room,
+      input.room ?? "",
       input.teacherName ?? null,
       input.entraGroupId ?? null,
       input.active === false ? 0 : 1,
@@ -159,7 +159,7 @@ export function updateClass(
   input: {
     name: string;
     gradeLevel?: string | null;
-    room: string;
+    room?: string;
     teacherName?: string | null;
     entraGroupId?: string | null;
     active?: boolean;
@@ -175,7 +175,7 @@ export function updateClass(
     .run(
       input.name,
       input.gradeLevel ?? null,
-      input.room,
+      input.room ?? "",
       input.teacherName ?? null,
       input.entraGroupId ?? null,
       input.active === false ? 0 : 1,

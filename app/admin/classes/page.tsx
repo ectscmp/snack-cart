@@ -32,9 +32,9 @@ export default function AdminClassesPage() {
           <div>
             <h1 className="text-3xl font-semibold tracking-tight">Classes</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Each class has a room used as the default delivery location. Link a
-              class to one or more Entra groups and its members are added
-              automatically at sign-in.
+              Each class can have a default delivery room and one or more Entra
+              groups. Members of those groups are added automatically at
+              sign-in.
             </p>
           </div>
           <AdminNav />
@@ -77,8 +77,8 @@ async function ClassesContent() {
                     {classRecord.name}
                   </CardTitle>
                   <CardDescription>
-                    Room {classRecord.room} · {members} member
-                    {members === 1 ? "" : "s"} ·{" "}
+                    {classRecord.room ? `Room ${classRecord.room} · ` : ""}
+                    {members} member{members === 1 ? "" : "s"} ·{" "}
                     {classRecord.active ? "Active" : "Inactive"} ·{" "}
                     {groupCount > 0
                       ? `${groupCount} Entra group${

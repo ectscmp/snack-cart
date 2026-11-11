@@ -46,7 +46,7 @@ const entraGroupIdSchema = z
 const classSchema = z.object({
   name: z.string().trim().min(1, "Name is required.").max(80),
   gradeLevel: z.string().trim().max(40).optional(),
-  room: z.string().trim().min(1, "Room is required.").max(40),
+  room: z.string().trim().max(40).optional(),
   teacherName: z.string().trim().max(120).optional(),
   entraGroupId: entraGroupIdSchema,
 });
@@ -84,7 +84,7 @@ export async function saveClassAction(
   const input = {
     name: parsed.data.name,
     gradeLevel: parsed.data.gradeLevel || null,
-    room: parsed.data.room,
+    room: parsed.data.room || "",
     teacherName: parsed.data.teacherName || null,
     entraGroupId: parsed.data.entraGroupId || null,
     active: formData.get("active") === "on",
