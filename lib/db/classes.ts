@@ -54,31 +54,47 @@ export function getClass(id: number): ClassRecord | null {
   return row ? toClass(row) : null;
 }
 
+function groupIdsOf(value: string | null): string[] {
+  return (value ?? "")
+    .split(/[\s,;]+/)
+    .map((id) => id.trim().toLowerCase())
+    .filter(Boolean);
+}
+
 /**
- * Finds the class mapped to an Entra security group. Used by the admin form to
- * reject two classes claiming the same group.
+ * Finds a class that already claims any of the supplied group IDs. Used by the
+ * admin form to stop two classes from matching the same Entra group.
  */
 export function findClassByEntraGroupId(
   entraGroupId: string,
   excludeClassId?: number,
 ): ClassRecord | null {
-  const row = getDb()
+  const wanted = new Set(groupIdsOf(entraGroupId));
+
+  if (wanted.size === 0) {
+    return null;
+  }
+
+  const rows = getDb()
     .prepare(
       `SELECT ${classColumns}
        FROM classes
-       WHERE lower(entra_group_id) = lower(?) AND (? IS NULL OR id != ?)
-       LIMIT 1`,
+       WHERE entra_group_id IS NOT NULL
+         AND (? IS NULL OR id != ?)`,
     )
-    .get(entraGroupId, excludeClassId ?? null, excludeClassId ?? null) as
-    | ClassRow
-    | undefined;
+    .all(excludeClassId ?? null, excludeClassId ?? null) as ClassRow[];
 
-  return row ? toClass(row) : null;
+  const match = rows.find((row) =>
+    groupIdsOf(row.entra_group_id).some((id) => wanted.has(id)),
+  );
+
+  return match ? toClass(match) : null;
 }
 
 /**
- * Picks the active class whose Entra group the user belongs to. If a user is in
- * several mapped groups, the first class by name wins so the result is stable.
+ * Picks the active class whose Entra group the user belongs to. A class may
+ * list several group IDs (comma-separated); if the user matches more than one
+ * class, the first class by name wins so the result is stable.
  */
 export function findClassByEntraGroups(
   entraGroupIds: string[],
@@ -87,20 +103,24 @@ export function findClassByEntraGroups(
     return null;
   }
 
-  // Keep the statement under SQLite's bound-parameter limit.
-  const ids = entraGroupIds.slice(0, 900);
-  const placeholders = ids.map(() => "lower(?)").join(",");
-  const row = getDb()
+  const membership = new Set(
+    entraGroupIds.map((id) => id.trim().toLowerCase()),
+  );
+
+  const rows = getDb()
     .prepare(
       `SELECT ${classColumns}
        FROM classes
-       WHERE active = 1 AND lower(entra_group_id) IN (${placeholders})
-       ORDER BY name COLLATE NOCASE ASC
-       LIMIT 1`,
+       WHERE active = 1 AND entra_group_id IS NOT NULL
+       ORDER BY name COLLATE NOCASE ASC`,
     )
-    .get(...ids) as ClassRow | undefined;
+    .all() as ClassRow[];
 
-  return row ? toClass(row) : null;
+  const match = rows.find((row) =>
+    groupIdsOf(row.entra_group_id).some((id) => membership.has(id)),
+  );
+
+  return match ? toClass(match) : null;
 }
 
 export function createClass(input: {

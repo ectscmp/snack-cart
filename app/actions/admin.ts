@@ -36,10 +36,10 @@ function isValidGroupList(value: string): boolean {
 const entraGroupIdSchema = z
   .string()
   .trim()
-  .max(64)
+  .max(500)
   .refine(
-    (value) => value === "" || entraGroupIdPattern.test(value),
-    "Use the Entra group object ID (a GUID), or leave it blank.",
+    (value) => value === "" || isValidGroupList(value),
+    "Use one or more Entra group object IDs (GUIDs), or leave it blank.",
   )
   .optional();
 

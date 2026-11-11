@@ -59,6 +59,11 @@ const jwtCallback: JwtCallback = async (params) => {
           syncUserClassFromGroups(userId, groupIds);
         }
 
+        const classId =
+          groupIds.length > 0
+            ? syncUserClassFromGroups(userId, groupIds)
+            : null;
+
         const settings = getSettings();
         const granted = syncUserRolesFromGroups(userId, groupIds, {
           // Settings win; environment variables are the deploy fallback.
@@ -69,9 +74,9 @@ const jwtCallback: JwtCallback = async (params) => {
         });
 
         console.info(
-          `[auth] ${email}: ${groupIds.length} group(s); granted ${
+          `[auth] ${email}: ${groupIds.length} group(s); roles ${
             granted.length ? granted.join(", ") : "none"
-          }`,
+          }; class ${classId ?? "none"}`,
         );
       }
     }

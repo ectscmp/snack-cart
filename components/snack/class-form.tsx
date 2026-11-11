@@ -84,8 +84,9 @@ export function ClassForm({ classRecord }: { classRecord?: ClassRecord }) {
             autoComplete="off"
           />
           <p className="text-xs text-muted-foreground">
-            Members of this security group are assigned to this class when they
-            sign in. Leave blank to assign people manually in Admin → Users.
+            One or more Entra group object IDs, separated by commas. Members of
+            any of these groups are assigned to this class when they sign in.
+            Leave blank to assign people manually in Admin → Users.
           </p>
         </div>
       </div>

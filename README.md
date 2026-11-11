@@ -122,8 +122,8 @@ nobody has to be set up by hand.
    the app reads memberships from Microsoft Graph instead.
 4. In **Admin → Settings**, paste the admin and staff group Object IDs. Leave
    either blank to keep that role manual.
-5. In **Admin → Classes**, paste a class group Object ID into **Entra group ID**
-   and save.
+5. In **Admin → Classes**, paste the class group Object ID (or several,
+   comma-separated) into **Entra group ID** and save.
 
 On every sign-in the app reads the user's group memberships — from the ID token
 `groups` claim when present, otherwise from Microsoft Graph `/me/memberOf` (the
