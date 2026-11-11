@@ -189,6 +189,24 @@ After the deploy, sign in with an `ADMIN_EMAILS` account and finish setup in
 
 ### Data and backups
 
+The SQLite database lives at `DATABASE_PATH` (default `./data/app.db`; use
+`/data/app.db` on Railway). It is **not** committed to git, so adding commits
+never touches or resets it. A fresh clone simply creates an empty database on
+first run.
+
+Back up the database file before redeploying or changing services. In
+production, mount a Railway volume at `/data` and set `DATABASE_PATH=/data/app.db`;
+without the volume, the filesystem is ephemeral and the database is recreated
+on every deploy.
+
+If your data ever looks like it reset, check these first:
+
+1. The volume is mounted at `/data` and `DATABASE_PATH=/data/app.db`.
+2. You are not pointing at a second `app.db` (the default is relative to the
+   current working directory).
+3. The schema migrates in place — `ensureColumn` keeps older databases working,
+   so a new release will not drop tables.
+
 The volume is the only persistent part of the deployment. Back up `/data/app.db`
 (and any `-wal` / `-shm` files alongside it) before redeploying or changing
 services.
