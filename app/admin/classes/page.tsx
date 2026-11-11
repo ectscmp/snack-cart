@@ -32,7 +32,9 @@ export default function AdminClassesPage() {
           <div>
             <h1 className="text-3xl font-semibold tracking-tight">Classes</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Each class has a room used as the default delivery location.
+              Each class has a room used as the default delivery location. Link a
+              class to one or more Entra groups and its members are added
+              automatically at sign-in.
             </p>
           </div>
           <AdminNav />
@@ -61,25 +63,36 @@ async function ClassesContent() {
             No classes yet. Add the first one on the right.
           </div>
         ) : (
-          classes.map((classRecord) => (
-            <Card key={classRecord.id}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <School className="size-4 text-muted-foreground" />
-                  {classRecord.name}
-                </CardTitle>
-                <CardDescription>
-                  Room {classRecord.room} ·{" "}
-                  {countClassMembers(classRecord.id)} member
-                  {countClassMembers(classRecord.id) === 1 ? "" : "s"} ·{" "}
-                  {classRecord.active ? "Active" : "Inactive"}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ClassForm classRecord={classRecord} />
-              </CardContent>
-            </Card>
-          ))
+          classes.map((classRecord) => {
+            const members = countClassMembers(classRecord.id);
+            const groupCount = (classRecord.entraGroupId ?? "")
+              .split(/[\s,;]+/)
+              .filter(Boolean).length;
+
+            return (
+              <Card key={classRecord.id}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <School className="size-4 text-muted-foreground" />
+                    {classRecord.name}
+                  </CardTitle>
+                  <CardDescription>
+                    Room {classRecord.room} · {members} member
+                    {members === 1 ? "" : "s"} ·{" "}
+                    {classRecord.active ? "Active" : "Inactive"} ·{" "}
+                    {groupCount > 0
+                      ? `${groupCount} Entra group${
+                          groupCount === 1 ? "" : "s"
+                        } linked`
+                      : "No Entra group — assigned manually"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ClassForm classRecord={classRecord} />
+                </CardContent>
+              </Card>
+            );
+          })
         )}
       </div>
 
