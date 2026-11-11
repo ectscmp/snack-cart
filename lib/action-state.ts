@@ -1,6 +1,7 @@
 export type ActionState = {
   status: "idle" | "success" | "error";
   message?: string;
+  details?: string[];
 };
 
 export const idleState: ActionState = { status: "idle" };

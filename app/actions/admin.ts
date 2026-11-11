@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { requireAdmin } from "@/lib/auth";
 import {
+  createClasses,
   createClass,
   createWindow,
   deleteWindow,
@@ -232,6 +233,180 @@ export async function saveUserAction(
   setUserRoles(userId.data, roles);
   refresh();
   return { status: "success", message: "User updated." };
+}
+
+export async function importClassesAction(
+  _previousState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  await requireAdmin();
+
+  const file = formData.get("csv");
+
+  if (!(file instanceof File) || file.size === 0) {
+    return { status: "error", message: "Choose a CSV file first." };
+  }
+
+  if (file.size > 1_000_000) {
+    return { status: "error", message: "File is too large (max 1 MB)." };
+  }
+
+  const text = await file.text();
+  const rows = parseCsv(text);
+
+  if (rows.length < 2) {
+    return {
+      status: "error",
+      message: "The CSV needs a header row and at least one data row.",
+    };
+  }
+
+  const header = rows[0].map(normalizeCsvHeader);
+  const nameIndex = header.findIndex((value) => value === "name");
+
+  if (nameIndex === -1) {
+    return {
+      status: "error",
+      message: "The CSV must have a column named name (or class / class_name).",
+    };
+  }
+
+  const columnIndex = (key: string) => header.indexOf(key);
+
+  const dataRows = rows
+    .slice(1)
+    .filter((row) => row.some((cell) => cell.trim() !== ""));
+
+  const parsed = dataRows.map((row) => ({
+    name: row[nameIndex] ?? "",
+    gradeLevel: valueAt(row, columnIndex("gradeLevel")),
+    room: valueAt(row, columnIndex("room")),
+    teacherName: valueAt(row, columnIndex("teacherName")),
+    entraGroupId: valueAt(row, columnIndex("entraGroupId")),
+    active: parseActive(valueAt(row, columnIndex("active"))),
+  }));
+
+  const result = createClasses(parsed);
+
+  refresh();
+
+  const summary =
+    result.created === 0 && result.skipped.length === 0
+      ? "No rows to import."
+      : `Imported ${result.created} class${
+          result.created === 1 ? "" : "es"
+        }${result.skipped.length ? `, skipped ${result.skipped.length}.` : "."}`;
+
+  return {
+    status: result.created > 0 ? "success" : "error",
+    message: summary,
+    details: result.skipped.map(
+      (entry) => `Row ${entry.row}: ${entry.reason}`,
+    ),
+  };
+}
+
+function valueAt(row: string[], index: number): string {
+  return index >= 0 ? (row[index] ?? "") : "";
+}
+
+function parseActive(value: string): boolean | undefined {
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized === "") {
+    return undefined;
+  }
+
+  if (["false", "0", "no", "inactive"].includes(normalized)) {
+    return false;
+  }
+
+  if (["true", "1", "yes", "active"].includes(normalized)) {
+    return true;
+  }
+
+  return undefined;
+}
+
+function normalizeCsvHeader(value: string): string {
+  const normalized = value.trim().toLowerCase().replace(/[\s-]+/g, "_");
+
+  const aliases: Record<string, string> = {
+    name: "name",
+    class: "name",
+    class_name: "name",
+    classname: "name",
+    room: "room",
+    delivery_room: "room",
+    deliveryroom: "room",
+    grade: "gradeLevel",
+    grade_level: "gradeLevel",
+    gradelevel: "gradeLevel",
+    teacher: "teacherName",
+    teacher_name: "teacherName",
+    teachername: "teacherName",
+    entra_group_id: "entraGroupId",
+    entragroupid: "entraGroupId",
+    group_id: "entraGroupId",
+    groupid: "entraGroupId",
+    group: "entraGroupId",
+    active: "active",
+  };
+
+  return aliases[normalized] ?? normalized;
+}
+
+function parseCsv(text: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let field = "";
+  let inQuotes = false;
+
+  if (text.charCodeAt(0) === 0xfeff) {
+    text = text.slice(1);
+  }
+
+  for (let i = 0; i < text.length; i += 1) {
+    const char = text[i];
+
+    if (inQuotes) {
+      if (char === '"') {
+        if (text[i + 1] === '"') {
+          field += '"';
+          i += 1;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        field += char;
+      }
+    } else if (char === '"') {
+      inQuotes = true;
+    } else if (char === ",") {
+      row.push(field);
+      field = "";
+    } else if (char === "\n") {
+      row.push(field);
+      rows.push(row);
+      row = [];
+      field = "";
+    } else if (char === "\r") {
+      // Ignore carriage returns; the next line feed ends the row.
+    } else {
+      field += char;
+    }
+  }
+
+  if (field !== "" || row.length > 0) {
+    row.push(field);
+    rows.push(row);
+  }
+
+  while (rows.length > 0 && rows[rows.length - 1].every((cell) => cell === "")) {
+    rows.pop();
+  }
+
+  return rows;
 }
 
 export async function saveSettingsAction(

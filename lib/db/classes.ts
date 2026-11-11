@@ -1,4 +1,4 @@
-import { getDb } from "./connection";
+import { getDb, withTransaction } from "./connection";
 import type { ClassRecord } from "./types";
 
 type ClassRow = {
@@ -181,6 +181,70 @@ export function updateClass(
       input.active === false ? 0 : 1,
       id,
     );
+}
+
+/**
+ * Creates several classes at once (used by the CSV import). Each row is
+ * validated independently so one bad row does not abort the whole import.
+ */
+export function createClasses(
+  rows: Array<{
+    name?: string | null;
+    gradeLevel?: string | null;
+    room?: string | null;
+    teacherName?: string | null;
+    entraGroupId?: string | null;
+    active?: boolean;
+  }>,
+): { created: number; skipped: Array<{ row: number; reason: string }> } {
+  const result = {
+    created: 0,
+    skipped: [] as Array<{ row: number; reason: string }>,
+  };
+
+  withTransaction(() => {
+    rows.forEach((row, index) => {
+      const rowNumber = index + 2;
+      const name = row.name?.trim();
+
+      if (!name) {
+        result.skipped.push({ row: rowNumber, reason: "missing name" });
+        return;
+      }
+
+      if (row.entraGroupId?.trim()) {
+        const conflict = findClassByEntraGroupId(row.entraGroupId.trim());
+
+        if (conflict) {
+          result.skipped.push({
+            row: rowNumber,
+            reason: `group already used by ${conflict.name}`,
+          });
+          return;
+        }
+      }
+
+      try {
+        createClass({
+          name,
+          gradeLevel: row.gradeLevel?.trim() || null,
+          room: row.room?.trim() || "",
+          teacherName: row.teacherName?.trim() || null,
+          entraGroupId: row.entraGroupId?.trim() || null,
+          active: row.active ?? true,
+        });
+
+        result.created += 1;
+      } catch (error) {
+        result.skipped.push({
+          row: rowNumber,
+          reason: error instanceof Error ? error.message : "failed",
+        });
+      }
+    });
+  });
+
+  return result;
 }
 
 export function countClassMembers(classId: number): number {

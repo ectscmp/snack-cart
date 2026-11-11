@@ -7,6 +7,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { AdminNav } from "@/components/snack/admin-nav";
 import { ClassForm } from "@/components/snack/class-form";
+import { ClassImportForm } from "@/components/snack/class-import-form";
 import {
   Card,
   CardContent,
@@ -96,14 +97,28 @@ async function ClassesContent() {
         )}
       </div>
 
-      <Card className="h-fit">
-        <CardHeader>
-          <CardTitle className="text-base">Add a class</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ClassForm />
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        <Card className="h-fit">
+          <CardHeader>
+            <CardTitle className="text-base">Add a class</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ClassForm />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Import from CSV</CardTitle>
+            <CardDescription>
+              Bulk add classes from a spreadsheet export.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ClassImportForm />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
