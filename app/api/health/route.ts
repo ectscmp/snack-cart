@@ -6,5 +6,6 @@ export async function GET() {
   return Response.json({
     status: "ok",
     timestamp: new Date().toISOString(),
+    databasePath: process.env.DATABASE_PATH ?? null,
   });
 }

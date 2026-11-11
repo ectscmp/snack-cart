@@ -16,6 +16,14 @@ const globalForDb = globalThis as unknown as {
 };
 
 function connect() {
+  if (process.env.RAILWAY_ENVIRONMENT && !databasePath.startsWith("/data")) {
+    console.warn(
+      `[db] WARNING: RAILWAY_ENVIRONMENT is set but DATABASE_PATH is "${databasePath}". ` +
+        "Mount a Railway volume at /data and set DATABASE_PATH=/data/app.db, or the " +
+        "database will be wiped on every redeploy.",
+    );
+  }
+
   mkdirSync(dirname(databasePath), { recursive: true });
 
   const database = new DatabaseSync(databasePath);
