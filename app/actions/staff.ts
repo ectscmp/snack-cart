@@ -4,10 +4,12 @@ import { refresh } from "next/cache";
 import { z } from "zod";
 
 import { requireStaff } from "@/lib/auth";
+import { parseCsv } from "@/lib/csv";
 import {
   adjustStock,
   createCategory,
   createProduct,
+  createProducts,
   deleteCategory,
   getCategory,
   getProduct,
@@ -241,6 +243,152 @@ export async function markOrderPaidAction(
 
   refresh();
   return { status: "success", message: "Marked paid." };
+}
+
+
+export async function importProductsAction(
+  _previousState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const user = await requireStaff();
+
+  const file = formData.get("csv");
+
+  if (!(file instanceof File) || file.size === 0) {
+    return { status: "error", message: "Choose a CSV file first." };
+  }
+
+  if (file.size > 2_000_000) {
+    return { status: "error", message: "File is too large (max 2 MB)." };
+  }
+
+  const text = await file.text();
+  const rows = parseCsv(text);
+
+  if (rows.length < 2) {
+    return {
+      status: "error",
+      message: "The CSV needs a header row and at least one data row.",
+    };
+  }
+
+  const header = rows[0].map((value) =>
+    value.trim().toLowerCase().replace(/[\s-]+/g, "_"),
+  );
+  const aliases: Record<string, string> = {
+    name: "name",
+    product: "name",
+    product_name: "name",
+    productname: "name",
+    category: "category",
+    category_name: "category",
+    categoryname: "category",
+    price: "price",
+    price_cents: "priceCents",
+    pricecents: "priceCents",
+    price_cents_total: "priceCents",
+    description: "description",
+    desc: "description",
+    stock: "stockQuantity",
+    stock_quantity: "stockQuantity",
+    stockquantity: "stockQuantity",
+    quantity: "stockQuantity",
+    low_stock_threshold: "lowStockThreshold",
+    lowstockthreshold: "lowStockThreshold",
+    low_stock: "lowStockThreshold",
+    active: "active",
+    image_url: "imageUrl",
+    imageurl: "imageUrl",
+    image: "imageUrl",
+  };
+
+  const normalizedHeader = header.map((value) => aliases[value] ?? value);
+
+  const indexOf = (key: string) => normalizedHeader.indexOf(key);
+
+  const nameIndex = indexOf("name");
+  const priceIndex = indexOf("price");
+  const priceCentsIndex = indexOf("priceCents");
+  const categoryIndex = indexOf("category");
+
+  if (nameIndex === -1) {
+    return {
+      status: "error",
+      message: "The CSV must have a column named name (or product / product_name).",
+    };
+  }
+
+  if (priceIndex === -1 && priceCentsIndex === -1) {
+    return {
+      status: "error",
+      message: "The CSV must have a price column (price or price_cents).",
+    };
+  }
+
+  const dataRows = rows
+    .slice(1)
+    .filter((row) => row.some((cell) => cell.trim() !== ""));
+
+  const parsed = dataRows.map((row) => {
+    const name = (row[nameIndex] ?? "").trim();
+    const category = categoryIndex >= 0 ? (row[categoryIndex] ?? "").trim() : "";
+
+    let priceCents: number | null = null;
+
+    if (priceCentsIndex >= 0) {
+      const raw = (row[priceCentsIndex] ?? "").trim();
+
+      if (raw) {
+        const parsedCents = Number(raw);
+
+        if (Number.isFinite(parsedCents)) {
+          priceCents = Math.round(parsedCents);
+        }
+      }
+    } else if (priceIndex >= 0) {
+      priceCents = parsePriceToCents((row[priceIndex] ?? "").trim());
+    }
+
+    const descriptionIndex = indexOf("description");
+    const stockIndex = indexOf("stockQuantity");
+    const thresholdIndex = indexOf("lowStockThreshold");
+    const activeIndex = indexOf("active");
+    const imageIndex = indexOf("imageUrl");
+
+    const activeRaw = activeIndex >= 0 ? (row[activeIndex] ?? "").trim().toLowerCase() : "";
+
+    return {
+      name,
+      category: category || "Snacks",
+      priceCents,
+      description: descriptionIndex >= 0 ? (row[descriptionIndex] ?? "").trim() : "",
+      stockQuantity: stockIndex >= 0 ? Number(row[stockIndex] ?? 0) : 0,
+      lowStockThreshold: thresholdIndex >= 0 ? Number(row[thresholdIndex] ?? 5) : 5,
+      active:
+        activeRaw === ""
+          ? true
+          : !["false", "0", "no", "inactive"].includes(activeRaw),
+      imageUrl: imageIndex >= 0 ? (row[imageIndex] ?? "").trim() : "",
+      createdBy: user.id,
+    };
+  });
+
+  const result = createProducts(parsed);
+
+  refresh();
+
+  const summary =
+    result.created === 0 && result.skipped.length === 0
+      ? "No rows to import."
+      : `Imported ${result.created} product${
+          result.created === 1 ? "" : "s"
+        }${result.skipped.length ? `, skipped ${result.skipped.length}.` : "."}`;
+
+  return {
+    status: result.created > 0 ? "success" : "error",
+    message: summary,
+    details: result.skipped.map((entry) => `Row ${entry.row}: ${entry.reason}`),
+  };
 }
 
 const categoryIdSchema = z.coerce.number().int().positive();

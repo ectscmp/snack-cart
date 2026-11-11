@@ -1,4 +1,5 @@
 import { getCategory } from "./categories";
+import { createCategory } from "./categories";
 import { getDb, withTransaction } from "./connection";
 import type { InventoryMovement, Product } from "./types";
 
@@ -295,6 +296,97 @@ export function listInventoryMovements(
         .all(limit) as MovementRow[]);
 
   return rows.map(toMovement);
+}
+
+/**
+ * Creates several products at once (used by the CSV import). Each row is
+ * validated independently so one bad row does not abort the whole import.
+ * Missing categories are created as top-level categories.
+ */
+export function createProducts(
+  rows: Array<{
+    name?: string | null;
+    category?: string | null;
+    priceCents?: number | null;
+    description?: string | null;
+    stockQuantity?: number | null;
+    lowStockThreshold?: number | null;
+    active?: boolean;
+    imageUrl?: string | null;
+    createdBy: string;
+  }>,
+): { created: number; skipped: Array<{ row: number; reason: string }> } {
+  const result = { created: 0, skipped: [] as Array<{ row: number; reason: string }> };
+
+  rows.forEach((row, index) => {
+    const rowNumber = index + 2;
+    const name = row.name?.trim();
+
+    if (!name) {
+      result.skipped.push({ row: rowNumber, reason: "missing name" });
+      return;
+    }
+
+    if (row.priceCents === null || row.priceCents === undefined) {
+      result.skipped.push({ row: rowNumber, reason: "missing price" });
+      return;
+    }
+
+    const categoryName = row.category?.trim() || "Snacks";
+    let category = getCategoryByName(categoryName);
+
+    if (!category) {
+      try {
+        category = createCategory(categoryName);
+      } catch (error) {
+        result.skipped.push({
+          row: rowNumber,
+          reason: error instanceof Error ? error.message : "could not create category",
+        });
+        return;
+      }
+    }
+
+    try {
+      createProduct({
+        name,
+        description: row.description?.trim() || null,
+        priceCents: row.priceCents,
+        categoryId: category.id,
+        imageUrl: row.imageUrl?.trim() || null,
+        active: row.active ?? true,
+        stockQuantity: Math.max(0, row.stockQuantity ?? 0),
+        lowStockThreshold: Math.max(0, row.lowStockThreshold ?? 5),
+        createdBy: row.createdBy,
+      });
+
+      result.created += 1;
+    } catch (error) {
+      result.skipped.push({
+        row: rowNumber,
+        reason: error instanceof Error ? error.message : "failed",
+      });
+    }
+  });
+
+  return result;
+}
+
+function getCategoryByName(name: string) {
+  const row = getDb()
+    .prepare("SELECT id, name, parent_id, sort_order FROM categories WHERE lower(name) = lower(?)")
+    .get(name.trim()) as { id: number; name: string; parent_id: number | null; sort_order: number } | undefined;
+
+  if (!row) {
+    return null;
+  }
+
+  return {
+    id: row.id,
+    name: row.name,
+    parentId: row.parent_id,
+    sortOrder: row.sort_order,
+  };
 }
 
 export function getLowStockProducts(): Product[] {

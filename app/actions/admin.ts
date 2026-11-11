@@ -4,6 +4,7 @@ import { refresh } from "next/cache";
 import { z } from "zod";
 
 import { requireAdmin } from "@/lib/auth";
+import { parseCsv } from "@/lib/csv";
 import {
   createClasses,
   createClass,
@@ -354,59 +355,6 @@ function normalizeCsvHeader(value: string): string {
   };
 
   return aliases[normalized] ?? normalized;
-}
-
-function parseCsv(text: string): string[][] {
-  const rows: string[][] = [];
-  let row: string[] = [];
-  let field = "";
-  let inQuotes = false;
-
-  if (text.charCodeAt(0) === 0xfeff) {
-    text = text.slice(1);
-  }
-
-  for (let i = 0; i < text.length; i += 1) {
-    const char = text[i];
-
-    if (inQuotes) {
-      if (char === '"') {
-        if (text[i + 1] === '"') {
-          field += '"';
-          i += 1;
-        } else {
-          inQuotes = false;
-        }
-      } else {
-        field += char;
-      }
-    } else if (char === '"') {
-      inQuotes = true;
-    } else if (char === ",") {
-      row.push(field);
-      field = "";
-    } else if (char === "\n") {
-      row.push(field);
-      rows.push(row);
-      row = [];
-      field = "";
-    } else if (char === "\r") {
-      // Ignore carriage returns; the next line feed ends the row.
-    } else {
-      field += char;
-    }
-  }
-
-  if (field !== "" || row.length > 0) {
-    row.push(field);
-    rows.push(row);
-  }
-
-  while (rows.length > 0 && rows[rows.length - 1].every((cell) => cell === "")) {
-    rows.pop();
-  }
-
-  return rows;
 }
 
 export async function saveSettingsAction(

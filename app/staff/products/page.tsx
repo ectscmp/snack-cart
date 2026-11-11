@@ -2,11 +2,12 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
-import { PackagePlus, Pencil } from "lucide-react";
+import { PackagePlus, Pencil, Upload } from "lucide-react";
 
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { ProductForm } from "@/components/snack/product-form";
+import { ProductImportForm } from "@/components/snack/product-import-form";
 import { ProductToggle } from "@/components/snack/product-toggle";
 import { StaffNav } from "@/components/snack/staff-nav";
 import { Badge } from "@/components/ui/badge";
@@ -148,6 +149,21 @@ async function ProductsContent() {
         </CardHeader>
         <CardContent>
           <ProductForm categories={categories} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Upload className="size-4 text-muted-foreground" />
+            Import from CSV
+          </CardTitle>
+          <CardDescription>
+            Bulk add products from a spreadsheet export.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ProductImportForm />
         </CardContent>
       </Card>
     </div>
