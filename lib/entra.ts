@@ -9,7 +9,7 @@
  */
 
 const GRAPH_MEMBER_OF =
-  "https://graph.microsoft.com/v1.0/me/memberOf?$select=id&$top=999";
+  "https://graph.microsoft.com/v1.0/me/transitiveMemberOf?$select=id&$top=999";
 
 /**
  * Returns `null` when the claim is absent (so callers can fall back to Graph)

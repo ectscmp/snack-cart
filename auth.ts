@@ -24,16 +24,19 @@ const jwtCallback: JwtCallback = async (params) => {
       | { groups?: unknown }
       | undefined;
 
-    // Entra may omit the claim entirely (not configured) or replace it with
-    // an overage marker when the user is in many groups. Fall back to
-    // Microsoft Graph in both cases.
-    let groupIds = normalizeGroupIds(entraProfile?.groups);
+    // Merge both sources. The ID token claim only carries the groups the app
+    // registration is configured to emit (and none on overage); Graph also
+    // catches Microsoft 365 and nested groups. If neither yields data, leave
+    // existing roles alone rather than revoking them.
+    const fromToken = normalizeGroupIds(entraProfile?.groups);
+    const fromGraph = params.account?.access_token
+      ? await fetchGroupIdsFromGraph(params.account.access_token)
+      : null;
 
-    if (groupIds === null) {
-      groupIds = params.account?.access_token
-        ? await fetchGroupIdsFromGraph(params.account.access_token)
-        : null;
-    }
+    const groupIds =
+      fromToken === null && fromGraph === null
+        ? null
+        : Array.from(new Set([...(fromToken ?? []), ...(fromGraph ?? [])]));
 
     if (groupIds) {
       const userId =
@@ -57,11 +60,19 @@ const jwtCallback: JwtCallback = async (params) => {
         }
 
         const settings = getSettings();
-
-        syncUserRolesFromGroups(userId, groupIds, {
-          adminGroupId: settings.adminGroupId,
-          staffGroupId: settings.staffGroupId,
+        const granted = syncUserRolesFromGroups(userId, groupIds, {
+          // Settings win; environment variables are the deploy fallback.
+          adminGroupId:
+            settings.adminGroupId || process.env.ENTRA_ADMIN_GROUPS || null,
+          staffGroupId:
+            settings.staffGroupId || process.env.ENTRA_STAFF_GROUPS || null,
         });
+
+        console.info(
+          `[auth] ${email}: ${groupIds.length} group(s); granted ${
+            granted.length ? granted.join(", ") : "none"
+          }`,
+        );
       }
     }
   }

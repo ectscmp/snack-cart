@@ -218,28 +218,32 @@ export function setUserRoles(userId: string, roles: UserRole[]): void {
 
 /**
  * Grants or revokes the `admin`/`staff` roles from Entra group membership.
- * Runs on every sign-in. Only rows with `source = 'entra'` are touched, so a
- * role granted by hand in Admin → Users (or by ADMIN_EMAILS) always survives.
+ * Runs on every sign-in. `adminGroupId`/`staffGroupId` accept a comma-, space-,
+ * or semicolon-separated list so one role can be driven by several groups.
+ * Only rows with `source = 'entra'` are touched, so a role granted by hand in
+ * Admin → Users (or by ADMIN_EMAILS) always survives.
  */
 export function syncUserRolesFromGroups(
   userId: string,
   entraGroupIds: string[],
   groups: { adminGroupId: string | null; staffGroupId: string | null },
-): void {
+): UserRole[] {
   const membership = new Set(entraGroupIds.map((id) => id.toLowerCase()));
+
+  const matches = (value: string | null): boolean =>
+    (value ?? "")
+      .split(/[\s,;]+/)
+      .map((id) => id.trim().toLowerCase())
+      .filter(Boolean)
+      .some((id) => membership.has(id));
+
   const desired = new Set<UserRole>();
 
-  if (
-    groups.adminGroupId &&
-    membership.has(groups.adminGroupId.toLowerCase())
-  ) {
+  if (matches(groups.adminGroupId)) {
     desired.add("admin");
   }
 
-  if (
-    groups.staffGroupId &&
-    membership.has(groups.staffGroupId.toLowerCase())
-  ) {
+  if (matches(groups.staffGroupId)) {
     desired.add("staff");
   }
 
@@ -258,6 +262,8 @@ export function syncUserRolesFromGroups(
       insert.run(userId, role);
     }
   });
+
+  return Array.from(desired);
 }
 
 export function hasRole(user: AppUser, role: UserRole): boolean {

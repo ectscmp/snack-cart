@@ -92,8 +92,9 @@ export function SettingsForm({ settings }: { settings: Settings }) {
             autoComplete="off"
           />
           <p className="text-xs text-muted-foreground">
-            Members get the admin role at sign-in. Leave blank to manage admins
-            by hand and with ADMIN_EMAILS.
+            One or more group object IDs, separated by commas. Members get the
+            admin role at sign-in. Leave blank to manage admins by hand and with
+            ADMIN_EMAILS.
           </p>
         </div>
         <div className="space-y-2">
@@ -108,8 +109,9 @@ export function SettingsForm({ settings }: { settings: Settings }) {
             autoComplete="off"
           />
           <p className="text-xs text-muted-foreground">
-            Members get the staff role at sign-in. Leaving the group removes it
-            again; roles set by hand are never touched.
+            One or more group object IDs, separated by commas. Members get the
+            staff role at sign-in. Leaving every group removes it again; roles
+            set by hand are never touched.
           </p>
         </div>
       </div>

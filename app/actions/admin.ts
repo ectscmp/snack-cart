@@ -26,6 +26,13 @@ const userIdSchema = z.string().trim().min(1);
 const entraGroupIdPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/** One or more GUIDs separated by commas, spaces, or semicolons. */
+function isValidGroupList(value: string): boolean {
+  const ids = value.split(/[\s,;]+/).filter(Boolean);
+
+  return ids.length > 0 && ids.every((id) => entraGroupIdPattern.test(id));
+}
+
 const entraGroupIdSchema = z
   .string()
   .trim()
@@ -252,10 +259,10 @@ export async function saveSettingsAction(
     ["Admin group", adminGroupId],
     ["Staff group", staffGroupId],
   ] as const) {
-    if (value && !entraGroupIdPattern.test(value)) {
+    if (value && !isValidGroupList(value)) {
       return {
         status: "error",
-        message: `${label} must be the Entra group object ID (a GUID).`,
+        message: `${label} must be one or more Entra group object IDs (GUIDs).`,
       };
     }
   }
