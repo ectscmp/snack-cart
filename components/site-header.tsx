@@ -25,8 +25,6 @@ export function SiteHeader() {
             fallback={
               <div className="flex items-center gap-2">
                 <Skeleton className="h-8 w-16" />
-                <Skeleton className="h-8 w-20" />
-                <Skeleton className="h-8 w-20" />
               </div>
             }
           >
@@ -43,9 +41,9 @@ export function SiteHeader() {
       </div>
 
       <div className="border-t md:hidden">
-        <div className="mx-auto w-full max-w-6xl overflow-x-auto">
-          <Suspense fallback={<Skeleton className="m-2 h-8 w-64" />}>
-            <NavLinks variant="mobile" />
+        <div className="mx-auto flex w-full max-w-6xl items-center gap-2 px-4 py-2">
+          <Suspense fallback={<Skeleton className="h-8 w-16" />}>
+            <NavLinks />
           </Suspense>
         </div>
       </div>
