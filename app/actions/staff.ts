@@ -34,7 +34,7 @@ const productSchema = z.object({
   lowStockThreshold: z.coerce.number().int().min(0).max(100000),
 });
 
-function readProductForm(formData: FormData) {
+async function readProductForm(formData: FormData) {
   const parsed = productSchema.safeParse({
     name: formData.get("name"),
     description: formData.get("description") ?? undefined,
@@ -62,13 +62,30 @@ function readProductForm(formData: FormData) {
     } as const;
   }
 
+  let imageUrl = parsed.data.imageUrl?.trim() || null;
+
+  const imageFile = formData.get("image");
+
+  if (imageFile instanceof File && imageFile.size > 0) {
+    if (imageFile.size > 2 * 1024 * 1024) {
+      return { error: "Image must be under 2 MB." } as const;
+    }
+
+    if (!imageFile.type.startsWith("image/")) {
+      return { error: "Choose an image file (PNG, JPG, etc.)." } as const;
+    }
+
+    const buffer = Buffer.from(await imageFile.arrayBuffer());
+    imageUrl = `data:${imageFile.type};base64,${buffer.toString("base64")}`;
+  }
+
   return {
     data: {
       name: parsed.data.name,
       description: parsed.data.description || null,
       priceCents,
       categoryId: category.id,
-      imageUrl: parsed.data.imageUrl || null,
+      imageUrl,
       lowStockThreshold: parsed.data.lowStockThreshold,
     },
   } as const;
@@ -79,7 +96,7 @@ export async function createProductAction(
   formData: FormData,
 ): Promise<ActionState> {
   const user = await requireStaff();
-  const parsed = readProductForm(formData);
+  const parsed = await readProductForm(formData);
 
   if ("error" in parsed) {
     return { status: "error", message: parsed.error };
@@ -115,7 +132,7 @@ export async function updateProductAction(
     return { status: "error", message: "Missing product." };
   }
 
-  const parsed = readProductForm(formData);
+  const parsed = await readProductForm(formData);
 
   if ("error" in parsed) {
     return { status: "error", message: parsed.error };

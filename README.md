@@ -15,7 +15,8 @@ built-in `node:sqlite`.
   database-backed cart, check out to their classroom, pay in person at
   delivery, and track order status.
 - **THM staff** manage products and stock with an audit trail, then work a
-  delivery queue grouped by room.
+  delivery queue grouped by room. Product photos can be uploaded (stored in the
+  database) or linked by URL.
 - **Admins** create classes and optional rooms, assign people to classes, grant
   staff or admin roles, set recurring weekly ordering windows per class, and pause
   ordering globally.

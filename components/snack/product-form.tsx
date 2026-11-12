@@ -130,11 +130,29 @@ export function ProductForm({
         ) : null}
 
         <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor={`image-${product?.id ?? "new"}`}>Image URL</Label>
+          <Label htmlFor={`image-${key}`}>Image</Label>
+          {product?.imageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={product.imageUrl}
+              alt=""
+              className="h-16 w-16 rounded-lg border object-cover"
+            />
+          ) : null}
           <Input
-            id={`image-${product?.id ?? "new"}`}
+            id={`image-${key}`}
+            name="image"
+            type="file"
+            accept="image/*"
+          />
+          <p className="text-xs text-muted-foreground">
+            Upload a photo (max 2 MB). It is stored in the database. Or paste a
+            URL below.
+          </p>
+          <Input
+            id={`imageUrl-${key}`}
             name="imageUrl"
-            defaultValue={product?.imageUrl ?? ""}
+            defaultValue={product?.imageUrl?.startsWith("data:") ? "" : (product?.imageUrl ?? "")}
             placeholder="https://… (optional)"
             maxLength={500}
           />
