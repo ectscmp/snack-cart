@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { DM_Sans, Fraunces, Geist_Mono } from "next/font/google";
 
@@ -49,7 +50,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           disableTransitionOnChange
         >
           <TooltipProvider>{children}</TooltipProvider>
-          <CartFab />
+          <Suspense fallback={null}>
+            <CartFab />
+          </Suspense>
           <Toaster />
         </ThemeProvider>
       </body>

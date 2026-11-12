@@ -23,12 +23,15 @@ export function NavDropdown({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-1.5">
+        <Button variant="outline" size="sm" className="gap-1.5">
           <Menu className="size-4" />
           <span className="hidden sm:inline">Menu</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-56">
+      <DropdownMenuContent
+        align="start"
+        className="w-56 !border-border !bg-card !text-card-foreground"
+      >
         {links.map((link) => {
           const active =
             link.href === "/"
@@ -37,13 +40,15 @@ export function NavDropdown({
                 pathname.startsWith(`${link.href}/`);
 
           return (
-            <DropdownMenuItem key={link.href} asChild>
-              <Link
-                href={link.href}
-                className={cn(active && "bg-accent text-accent-foreground")}
-              >
-                {link.label}
-              </Link>
+            <DropdownMenuItem
+              key={link.href}
+              asChild
+              className={cn(
+                "text-card-foreground",
+                active && "bg-accent text-accent-foreground",
+              )}
+            >
+              <Link href={link.href}>{link.label}</Link>
             </DropdownMenuItem>
           );
         })}
