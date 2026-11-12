@@ -39,6 +39,10 @@ export const metadata: Metadata = {
 };
 
 export default function AdminPage() {
+  const ephemeralDatabase =
+    Boolean(process.env.RAILWAY_ENVIRONMENT) &&
+    !(process.env.DATABASE_PATH ?? "").startsWith("/data");
+
   return (
     <div className="flex min-h-svh flex-col">
       <SiteHeader />
@@ -52,6 +56,24 @@ export default function AdminPage() {
           </div>
           <AdminNav />
         </div>
+
+        {ephemeralDatabase ? (
+          <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            <p className="font-medium">Database is not persistent</p>
+            <p className="mt-1 text-xs">
+              This deployment is running on Railway but{" "}
+              <code className="font-mono">DATABASE_PATH</code> is{" "}
+              <code className="font-mono">
+                {process.env.DATABASE_PATH ?? "(unset)"}
+              </code>
+              , so the SQLite file lives on the container filesystem and is
+              wiped on every redeploy. Mount a volume at <code className="font-mono">/data</code>{" "}
+              and set <code className="font-mono">DATABASE_PATH=/data/app.db</code>,
+              then redeploy. The current database path is also reported by{" "}
+              <code className="font-mono">/api/health</code>.
+            </p>
+          </div>
+        ) : null}
 
         <Suspense fallback={<Skeleton className="h-64 w-full rounded-xl" />}>
           <Overview />
