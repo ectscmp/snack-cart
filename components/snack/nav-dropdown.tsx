@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { cn } from "cn";
 
 import { Button } from "@/components/ui/button";
@@ -14,41 +14,43 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export function NavDropdown({
-  links,
+  label,
+  items,
 }: {
-  links: { href: string; label: string }[];
+  label: string;
+  items: { href: string; label: string }[];
 }) {
   const pathname = usePathname();
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-1.5">
-          <Menu className="size-4" />
-          <span className="hidden sm:inline">Menu</span>
+        <Button variant="ghost" size="sm" className="gap-1">
+          {label}
+          <ChevronDown className="size-3.5 opacity-60" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="start"
         className="w-56 !border-border !bg-card !text-card-foreground"
       >
-        {links.map((link) => {
+        {items.map((item) => {
           const active =
-            link.href === "/"
+            item.href === "/"
               ? pathname === "/"
-              : pathname === link.href ||
-                pathname.startsWith(`${link.href}/`);
+              : pathname === item.href ||
+                pathname.startsWith(`${item.href}/`);
 
           return (
             <DropdownMenuItem
-              key={link.href}
+              key={item.href}
               asChild
               className={cn(
                 "text-card-foreground",
                 active && "bg-accent text-accent-foreground",
               )}
             >
-              <Link href={link.href}>{link.label}</Link>
+              <Link href={item.href}>{item.label}</Link>
             </DropdownMenuItem>
           );
         })}
