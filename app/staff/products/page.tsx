@@ -97,7 +97,7 @@ async function ProductsContent() {
                     </p>
                     {product.optionSet ? (
                       <p className="text-xs text-muted-foreground">
-                        Choices:{" "}
+                        Options:{" "}
                         {getProductOptionSet(product.optionSet)?.options
                           .map((option) => option.label)
                           .join(", ") ?? product.optionSet}

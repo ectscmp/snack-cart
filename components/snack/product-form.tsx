@@ -165,7 +165,7 @@ export function ProductForm({
         </div>
 
         <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor={`optionSet-${key}`}>Customer choices</Label>
+          <Label htmlFor={`optionSet-${key}`}>Menu dropdown</Label>
           <select
             id={`optionSet-${key}`}
             name="optionSet"
@@ -173,7 +173,7 @@ export function ProductForm({
             onChange={(event) => setOptionSetId(event.target.value)}
             className="h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm"
           >
-            <option value="">No choices</option>
+            <option value="">No dropdown</option>
             {PRODUCT_OPTION_SETS.map((optionSet) => (
               <option key={optionSet.id} value={optionSet.id}>
                 {optionSet.label}
@@ -182,7 +182,7 @@ export function ProductForm({
           </select>
           {selectedOptionSet ? (
             <div className="rounded-lg border bg-muted/30 px-3 py-2 text-xs">
-              <p className="font-medium">Customer dropdown will show:</p>
+              <p className="font-medium">Customers will see:</p>
               <ul className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-muted-foreground">
                 {selectedOptionSet.options.map((option) => (
                   <li key={option.value}>
@@ -196,7 +196,8 @@ export function ProductForm({
             </div>
           ) : (
             <p className="text-xs text-muted-foreground">
-              Adds a dropdown to this product on the menu.
+              Pick the flavors or options customers can choose from. This adds a
+              dropdown to the product&apos;s menu card.
             </p>
           )}
         </div>
