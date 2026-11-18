@@ -56,6 +56,7 @@
 }
 
 :root {
+  color-scheme: light;
   /* Eagle Express menu palette: deep teal, golden yellow, warm cream. */
   --paper: #faf4e8;
   --ink: #17282d;
@@ -100,6 +101,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   --paper: #0e1f24;
   --ink: #f7f0e2;
   --teal: #8fc3cd;
@@ -150,6 +152,14 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  select {
+    color: var(--foreground);
+  }
+  select option,
+  select optgroup {
+    background-color: var(--popover);
+    color: var(--popover-foreground);
   }
   h1,
   h2,
