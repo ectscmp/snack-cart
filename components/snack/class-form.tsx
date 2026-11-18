@@ -24,7 +24,7 @@ export function ClassForm({ classRecord }: { classRecord?: ClassRecord }) {
   }, [state]);
 
   return (
-    <form action={formAction} className="space-y-3">
+    <form action={formAction} className="min-w-0 space-y-3">
       {classRecord ? (
         <input type="hidden" name="classId" value={classRecord.id} />
       ) : null}
@@ -108,7 +108,12 @@ export function ClassForm({ classRecord }: { classRecord?: ClassRecord }) {
         <p className="text-sm text-destructive">{state.message}</p>
       ) : null}
 
-      <Button type="submit" size="sm" disabled={pending}>
+      <Button
+        type="submit"
+        size="sm"
+        className="w-full sm:w-auto"
+        disabled={pending}
+      >
         {pending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
         {classRecord ? "Save class" : "Add class"}
       </Button>

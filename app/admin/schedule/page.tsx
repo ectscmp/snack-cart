@@ -29,9 +29,9 @@ export default function AdminSchedulePage() {
   return (
     <div className="flex min-h-svh flex-col">
       <SiteHeader />
-      <main className="mx-auto w-full max-w-5xl flex-1 space-y-6 px-4 py-10">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
+      <main className="mx-auto w-full max-w-5xl flex-1 space-y-6 px-4 py-8 sm:py-10">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div className="min-w-0">
             <h1 className="text-3xl font-semibold tracking-tight">Schedule</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               Weekly windows are evaluated in the school timezone.
@@ -73,13 +73,13 @@ async function ScheduleContent() {
           );
 
           return (
-            <Card key={classRecord.id}>
+            <Card key={classRecord.id} className="min-w-0">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <CalendarClock className="size-4 text-muted-foreground" />
-                  {classRecord.name}
+                <CardTitle className="flex min-w-0 flex-wrap items-center gap-2 text-base">
+                  <CalendarClock className="size-4 shrink-0 text-muted-foreground" />
+                  <span className="min-w-0 break-words">{classRecord.name}</span>
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="break-words">
                   {classWindows.length === 0
                     ? "No windows yet."
                     : classWindows
@@ -99,8 +99,8 @@ async function ScheduleContent() {
                     key={window.id}
                     className="rounded-lg border px-3 py-2"
                   >
-                    <summary className="flex cursor-pointer items-center justify-between gap-2 text-sm">
-                      <span>
+                    <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-2 text-sm">
+                      <span className="min-w-0 break-words">
                         {formatWindow(
                           window.dayOfWeek,
                           window.startMinute,
@@ -108,7 +108,7 @@ async function ScheduleContent() {
                         )}
                         {window.label ? ` · ${window.label}` : ""}
                       </span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="shrink-0 text-xs text-muted-foreground">
                         {window.active ? "Active" : "Inactive"}
                       </span>
                     </summary>

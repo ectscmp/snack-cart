@@ -20,9 +20,15 @@ export function CancelOrderButton({ orderId }: { orderId: number }) {
   }, [state]);
 
   return (
-    <form action={formAction}>
+    <form action={formAction} className="w-full sm:w-auto">
       <input type="hidden" name="orderId" value={orderId} />
-      <Button type="submit" variant="outline" size="sm" disabled={pending}>
+      <Button
+        type="submit"
+        variant="outline"
+        size="sm"
+        disabled={pending}
+        className="w-full sm:w-auto"
+      >
         {pending ? <Loader2 className="size-4 animate-spin" /> : <X className="size-4" />}
         Cancel order
       </Button>

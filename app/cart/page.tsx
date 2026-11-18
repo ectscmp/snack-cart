@@ -30,7 +30,7 @@ export default function CartPage() {
   return (
     <div className="flex min-h-svh flex-col">
       <SiteHeader />
-      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-10">
+      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:py-10">
         <div className="mb-6">
           <h1 className="text-3xl font-semibold tracking-tight">Your cart</h1>
         </div>

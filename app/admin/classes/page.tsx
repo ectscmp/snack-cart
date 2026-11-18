@@ -28,9 +28,9 @@ export default function AdminClassesPage() {
   return (
     <div className="flex min-h-svh flex-col">
       <SiteHeader />
-      <main className="mx-auto w-full max-w-5xl flex-1 space-y-6 px-4 py-10">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
+      <main className="mx-auto w-full max-w-5xl flex-1 space-y-6 px-4 py-8 sm:py-10">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div className="min-w-0">
             <h1 className="text-3xl font-semibold tracking-tight">Classes</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               Each class can have a default delivery room and one or more Entra
@@ -61,7 +61,7 @@ async function ClassesContent() {
       <div className="space-y-3">
         {classes.length === 0 ? (
           <div className="rounded-xl border border-dashed bg-background px-6 py-16 text-center text-sm text-muted-foreground">
-            No classes yet. Add the first one on the right.
+            No classes yet. Add the first one below.
           </div>
         ) : (
           classes.map((classRecord) => {
@@ -71,13 +71,13 @@ async function ClassesContent() {
               .filter(Boolean).length;
 
             return (
-              <Card key={classRecord.id}>
+              <Card key={classRecord.id} className="min-w-0">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <School className="size-4 text-muted-foreground" />
-                    {classRecord.name}
+                  <CardTitle className="flex min-w-0 flex-wrap items-center gap-2 text-base">
+                    <School className="size-4 shrink-0 text-muted-foreground" />
+                    <span className="min-w-0 break-words">{classRecord.name}</span>
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="break-words">
                     {classRecord.room ? `Room ${classRecord.room} · ` : ""}
                     {members} member{members === 1 ? "" : "s"} ·{" "}
                     {classRecord.active ? "Active" : "Inactive"} ·{" "}
@@ -107,7 +107,7 @@ async function ClassesContent() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="h-fit">
           <CardHeader>
             <CardTitle className="text-base">Import from CSV</CardTitle>
             <CardDescription>

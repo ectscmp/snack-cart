@@ -25,7 +25,7 @@ export function ClassImportForm() {
   }, [state]);
 
   return (
-    <form action={formAction} className="space-y-3">
+    <form action={formAction} className="min-w-0 space-y-3">
       <div className="space-y-2">
         <Label htmlFor="classes-csv">CSV file</Label>
         <Input
@@ -35,7 +35,7 @@ export function ClassImportForm() {
           accept=".csv,text/csv"
           required
         />
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs break-words text-muted-foreground">
           Header row: <code className="font-mono">name, room, grade_level,
           teacher_name, entra_group_id, active</code>. Only <code>name</code> is
           required. <code>active</code> defaults to true.
@@ -43,7 +43,7 @@ export function ClassImportForm() {
       </div>
 
       {state.status === "error" && state.details?.length ? (
-        <ul className="max-h-32 space-y-1 overflow-auto rounded-lg border bg-muted/30 p-2 text-xs text-muted-foreground">
+        <ul className="max-h-32 space-y-1 overflow-auto rounded-lg border bg-muted/30 p-2 text-xs break-words text-muted-foreground">
           {state.details.map((detail, index) => (
             <li key={index}>{detail}</li>
           ))}
@@ -51,14 +51,19 @@ export function ClassImportForm() {
       ) : null}
 
       {state.status === "success" && state.details?.length ? (
-        <ul className="max-h-32 space-y-1 overflow-auto rounded-lg border bg-muted/30 p-2 text-xs text-muted-foreground">
+        <ul className="max-h-32 space-y-1 overflow-auto rounded-lg border bg-muted/30 p-2 text-xs break-words text-muted-foreground">
           {state.details.map((detail, index) => (
             <li key={index}>{detail}</li>
           ))}
         </ul>
       ) : null}
 
-      <Button type="submit" size="sm" disabled={pending}>
+      <Button
+        type="submit"
+        size="sm"
+        className="w-full sm:w-auto"
+        disabled={pending}
+      >
         {pending ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
         Import classes
       </Button>

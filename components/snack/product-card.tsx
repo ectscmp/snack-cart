@@ -20,7 +20,6 @@ export function ProductCard({
 }) {
   const soldOut = product.stockQuantity <= 0;
   const low = !soldOut && product.stockQuantity <= product.lowStockThreshold;
-  const hasOptions = choices.length > 0 || addons.length > 0;
 
   return (
     <article className="flex h-full flex-col overflow-hidden rounded-xl border bg-card transition-colors hover:border-foreground/20">
@@ -67,12 +66,7 @@ export function ProductCard({
           {product.description ?? "A fresh pick from the cart."}
         </p>
 
-        <div
-          className={cn(
-            "mt-auto flex gap-3 pt-1",
-            hasOptions ? "flex-col" : "items-center justify-between",
-          )}
-        >
+        <div className="mt-auto flex flex-col gap-3 pt-1">
           <span
             className={cn(
               "text-xs",

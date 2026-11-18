@@ -35,7 +35,7 @@ export function ProductImportForm() {
           accept=".csv,text/csv"
           required
         />
-        <p className="text-xs text-muted-foreground">
+        <p className="break-words text-xs text-muted-foreground">
           Header row: <code className="font-mono">name, category, price</code>.
           Optional columns: <code className="font-mono">description, stock,
           low_stock_threshold, active, image_url, option_set</code>. Missing categories are
@@ -47,14 +47,19 @@ export function ProductImportForm() {
       </div>
 
       {state.details?.length ? (
-        <ul className="max-h-32 space-y-1 overflow-auto rounded-lg border bg-muted/30 p-2 text-xs text-muted-foreground">
+        <ul className="max-h-32 space-y-1 overflow-auto rounded-lg border bg-muted/30 p-2 text-xs break-words text-muted-foreground">
           {state.details.map((detail, index) => (
             <li key={index}>{detail}</li>
           ))}
         </ul>
       ) : null}
 
-      <Button type="submit" size="sm" disabled={pending}>
+      <Button
+        type="submit"
+        size="sm"
+        disabled={pending}
+        className="w-full sm:w-auto"
+      >
         {pending ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
         Import products
       </Button>

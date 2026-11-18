@@ -32,12 +32,17 @@ export default function OrdersPage() {
   return (
     <div className="flex min-h-svh flex-col">
       <SiteHeader />
-      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-10">
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:py-10">
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h1 className="text-3xl font-semibold tracking-tight">My orders</h1>
           </div>
-          <Button asChild variant="outline" size="sm" className="rounded-full">
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="w-full rounded-full sm:w-auto"
+          >
             <Link href="/menu">Order again</Link>
           </Button>
         </div>
@@ -94,8 +99,8 @@ async function OrdersContent() {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="flex items-center justify-between gap-3">
-            <p className="line-clamp-1 text-sm text-muted-foreground">
+          <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="line-clamp-2 min-w-0 text-sm text-muted-foreground sm:line-clamp-1">
               {order.items
                 .map(
                   (item) =>
@@ -105,11 +110,21 @@ async function OrdersContent() {
                 )
                 .join(", ")}
             </p>
-            <div className="flex shrink-0 items-center gap-1">
-              <Button asChild size="sm" variant="outline">
+            <div className="flex w-full items-center gap-1 sm:w-auto sm:shrink-0">
+              <Button
+                asChild
+                size="sm"
+                variant="outline"
+                className="flex-1 sm:flex-none"
+              >
                 <Link href={`/orders/${order.id}/receipt`}>Receipt</Link>
               </Button>
-              <Button asChild size="sm" variant="ghost">
+              <Button
+                asChild
+                size="sm"
+                variant="ghost"
+                className="flex-1 sm:flex-none"
+              >
                 <Link href={`/orders/${order.id}`}>
                   Details
                   <ArrowRight className="size-4" />

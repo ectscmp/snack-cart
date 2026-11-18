@@ -18,7 +18,7 @@ export default function MenuPage() {
       <SiteHeader />
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:py-12">
-        <div className="flex flex-wrap items-start justify-between gap-6">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
           <div className="max-w-lg">
             <h1 className="text-3xl font-semibold tracking-tight">Menu</h1>
             <p className="mt-1 text-sm leading-relaxed text-muted-foreground">

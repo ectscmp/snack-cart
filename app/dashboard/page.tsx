@@ -46,7 +46,7 @@ export default function DashboardPage() {
   return (
     <div className="flex min-h-svh flex-col">
       <SiteHeader />
-      <main className="mx-auto w-full max-w-6xl flex-1 space-y-6 px-4 py-10">
+      <main className="mx-auto w-full max-w-6xl flex-1 space-y-6 px-4 py-8 sm:py-10">
         <Suspense fallback={<Skeleton className="h-24 w-full rounded-xl" />}>
           <DashboardHeader />
         </Suspense>
@@ -82,16 +82,16 @@ async function DashboardHeader() {
   const user = await requireUser();
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-4">
-      <div className="flex items-center gap-3">
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex min-w-0 items-center gap-3">
         <Avatar>
           {user.image ? <AvatarImage src={user.image} alt="" /> : null}
           <AvatarFallback>
             <UserRound className="size-4" />
           </AvatarFallback>
         </Avatar>
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">
+        <div className="min-w-0">
+          <h1 className="truncate text-3xl font-semibold tracking-tight">
             Hi, {user.name.split(" ")[0]}
           </h1>
           <div className="mt-1 flex flex-wrap gap-1.5">
@@ -106,7 +106,7 @@ async function DashboardHeader() {
           </div>
         </div>
       </div>
-      <Button asChild>
+      <Button asChild className="w-full sm:w-auto">
         <Link href="/menu">Order snacks</Link>
       </Button>
     </div>
@@ -144,7 +144,10 @@ async function RecentOrders() {
         ) : (
           <ul className="divide-y">
             {orders.map((order) => (
-              <li key={order.id} className="flex items-center justify-between gap-3 py-3">
+              <li
+                key={order.id}
+                className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between"
+              >
                 <div className="min-w-0">
                   <Link
                     href={`/orders/${order.id}`}
@@ -157,7 +160,9 @@ async function RecentOrders() {
                     items · {formatCents(order.subtotalCents)}
                   </p>
                 </div>
-                <OrderStatusBadge status={order.status} />
+                <div className="shrink-0">
+                  <OrderStatusBadge status={order.status} />
+                </div>
               </li>
             ))}
           </ul>

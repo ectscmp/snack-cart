@@ -40,15 +40,17 @@ export default function StaffInventoryPage() {
   return (
     <div className="flex min-h-svh flex-col">
       <SiteHeader />
-      <main className="mx-auto w-full max-w-6xl flex-1 space-y-6 px-4 py-10">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
+      <main className="mx-auto w-full max-w-6xl flex-1 space-y-6 px-4 py-8 sm:py-10">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div className="min-w-0">
             <h1 className="text-3xl font-semibold tracking-tight">Inventory</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               Restock items and keep the stock counts honest.
             </p>
           </div>
-          <StaffNav />
+          <div className="w-full min-w-0 lg:w-auto">
+            <StaffNav />
+          </div>
         </div>
 
         <Suspense fallback={<Skeleton className="h-80 w-full rounded-xl" />}>
@@ -77,7 +79,7 @@ async function InventoryContent() {
               <PackageSearch className="size-4 text-amber-600" />
               {lowStock.length} item{lowStock.length === 1 ? "" : "s"} running low
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="break-words">
               {lowStock.map((product) => product.name).join(", ")}
             </CardDescription>
           </CardHeader>
@@ -93,54 +95,96 @@ async function InventoryContent() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Product</TableHead>
-                  <TableHead>On hand</TableHead>
-                  <TableHead>Alert at</TableHead>
-                  <TableHead>Adjust</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {products.map((product) => (
-                  <TableRow key={product.id}>
-                    <TableCell>
-                      <p className="font-medium">{product.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {product.category}
-                        {product.active ? "" : " · hidden"}
-                      </p>
-                    </TableCell>
-                    <TableCell>
-                      <span
-                        className={
-                          product.stockQuantity <= product.lowStockThreshold
-                            ? "font-medium text-amber-600"
-                            : undefined
-                        }
-                      >
-                        {product.stockQuantity}
-                      </span>
-                    </TableCell>
-                    <TableCell>{product.lowStockThreshold}</TableCell>
-                    <TableCell>
-                      <StockForm productId={product.id} />
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {products.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={4}
-                      className="py-10 text-center text-muted-foreground"
-                    >
-                      Add products first.
-                    </TableCell>
-                  </TableRow>
-                ) : null}
-              </TableBody>
-            </Table>
+            {products.length === 0 ? (
+              <p className="py-10 text-center text-sm text-muted-foreground">
+                Add products first.
+              </p>
+            ) : (
+              <>
+                <div className="space-y-3 md:hidden">
+                  {products.map((product) => (
+                    <div key={product.id} className="rounded-lg border p-3">
+                      <div className="min-w-0">
+                        <p className="font-medium break-words">{product.name}</p>
+                        <p className="text-xs break-words text-muted-foreground">
+                          {product.category}
+                          {product.active ? "" : " · hidden"}
+                        </p>
+                      </div>
+
+                      <dl className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                        <div className="flex items-baseline gap-1.5">
+                          <dt className="text-muted-foreground">On hand</dt>
+                          <dd
+                            className={
+                              product.stockQuantity <= product.lowStockThreshold
+                                ? "font-medium text-amber-600"
+                                : "font-medium"
+                            }
+                          >
+                            {product.stockQuantity}
+                          </dd>
+                        </div>
+                        <div className="flex items-baseline gap-1.5">
+                          <dt className="text-muted-foreground">Alert at</dt>
+                          <dd className="font-medium">
+                            {product.lowStockThreshold}
+                          </dd>
+                        </div>
+                      </dl>
+
+                      <div className="mt-3">
+                        <StockForm productId={product.id} layout="stacked" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="hidden md:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Product</TableHead>
+                        <TableHead>On hand</TableHead>
+                        <TableHead>Alert at</TableHead>
+                        <TableHead>Adjust</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {products.map((product) => (
+                        <TableRow key={product.id}>
+                          <TableCell className="whitespace-normal">
+                            <p className="font-medium break-words">
+                              {product.name}
+                            </p>
+                            <p className="text-xs break-words text-muted-foreground">
+                              {product.category}
+                              {product.active ? "" : " · hidden"}
+                            </p>
+                          </TableCell>
+                          <TableCell>
+                            <span
+                              className={
+                                product.stockQuantity <=
+                                product.lowStockThreshold
+                                  ? "font-medium text-amber-600"
+                                  : undefined
+                              }
+                            >
+                              {product.stockQuantity}
+                            </span>
+                          </TableCell>
+                          <TableCell>{product.lowStockThreshold}</TableCell>
+                          <TableCell className="whitespace-normal">
+                            <StockForm productId={product.id} />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -158,7 +202,7 @@ async function InventoryContent() {
                   <li key={movement.id} className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className="truncate font-medium">{movement.productName}</p>
-                      <p className="text-xs capitalize text-muted-foreground">
+                      <p className="text-xs break-words capitalize text-muted-foreground">
                         {movement.reason}
                         {movement.actorName ? ` · ${movement.actorName}` : ""}
                       </p>
@@ -167,8 +211,8 @@ async function InventoryContent() {
                       variant="outline"
                       className={
                         movement.delta > 0
-                          ? "text-emerald-600"
-                          : "text-destructive"
+                          ? "shrink-0 text-emerald-600"
+                          : "shrink-0 text-destructive"
                       }
                     >
                       {movement.delta > 0 ? "+" : ""}

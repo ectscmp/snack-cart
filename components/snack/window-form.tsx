@@ -34,7 +34,7 @@ export function WindowForm({
   }, [state]);
 
   return (
-    <form action={formAction} className="space-y-3">
+    <form action={formAction} className="min-w-0 space-y-3">
       {window ? <input type="hidden" name="windowId" value={window.id} /> : null}
 
       <div className="grid gap-3 sm:grid-cols-2">
@@ -45,7 +45,7 @@ export function WindowForm({
             name="classId"
             defaultValue={window?.classId ?? classes[0]?.id}
             required
-            className="h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm"
+            className="h-9 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 text-sm"
           >
             {classes.map((entry) => (
               <option key={entry.id} value={entry.id}>
@@ -62,7 +62,7 @@ export function WindowForm({
             id={`window-day-${key}`}
             name="dayOfWeek"
             defaultValue={window?.dayOfWeek ?? 1}
-            className="h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm"
+            className="h-9 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 text-sm"
           >
             {weekdayOptions().map((option) => (
               <option key={option.value} value={option.value}>
@@ -122,7 +122,12 @@ export function WindowForm({
         <p className="text-sm text-destructive">{state.message}</p>
       ) : null}
 
-      <Button type="submit" size="sm" disabled={pending}>
+      <Button
+        type="submit"
+        size="sm"
+        className="w-full sm:w-auto"
+        disabled={pending}
+      >
         {pending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
         {window ? "Save window" : "Add window"}
       </Button>

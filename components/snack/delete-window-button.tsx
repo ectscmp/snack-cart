@@ -20,9 +20,15 @@ export function DeleteWindowButton({ windowId }: { windowId: number }) {
   }, [state]);
 
   return (
-    <form action={formAction}>
+    <form action={formAction} className="flex">
       <input type="hidden" name="windowId" value={windowId} />
-      <Button type="submit" variant="ghost" size="sm" disabled={pending}>
+      <Button
+        type="submit"
+        variant="ghost"
+        size="sm"
+        className="w-full sm:w-auto"
+        disabled={pending}
+      >
         {pending ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
         Remove
       </Button>

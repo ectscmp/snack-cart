@@ -29,9 +29,9 @@ export default function PickListsPage() {
   return (
     <div className="flex min-h-svh flex-col">
       <SiteHeader />
-      <main className="mx-auto w-full max-w-4xl flex-1 space-y-6 px-4 py-10">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
+      <main className="mx-auto w-full max-w-4xl flex-1 space-y-6 px-4 py-8 sm:py-10">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div className="min-w-0">
             <h1 className="text-3xl font-semibold tracking-tight">
               Class pick lists
             </h1>
@@ -40,7 +40,9 @@ export default function PickListsPage() {
               everything before walking over.
             </p>
           </div>
-          <StaffNav />
+          <div className="w-full min-w-0 lg:w-auto">
+            <StaffNav />
+          </div>
         </div>
 
         <Suspense fallback={<Skeleton className="h-64 w-full rounded-xl" />}>
@@ -77,11 +79,11 @@ async function PickListsContent() {
       {summaries.map((summary) => (
         <Card key={summary.classId}>
           <CardHeader>
-            <div className="flex flex-wrap items-start justify-between gap-2">
-              <div>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
                 <CardTitle className="text-base">{summary.className}</CardTitle>
                 <CardDescription className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <MapPin className="size-3.5" />
+                  <MapPin className="size-3.5 shrink-0" />
                   {summary.room ? `Room ${summary.room}` : "No room set"}
                   <span>·</span>
                   <span>
@@ -95,13 +97,13 @@ async function PickListsContent() {
                   </span>
                 </CardDescription>
               </div>
-              <span className="text-sm font-semibold">
+              <span className="shrink-0 text-sm font-semibold tabular-nums">
                 {formatCents(summary.totalCents)}
               </span>
             </div>
           </CardHeader>
           <CardContent>
-            <Button asChild size="sm">
+            <Button asChild size="sm" className="w-full sm:w-auto">
               <Link href={`/staff/pick-lists/${summary.classId}`}>
                 <ClipboardList className="size-4" />
                 Open pick list

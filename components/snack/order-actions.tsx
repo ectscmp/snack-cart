@@ -74,9 +74,9 @@ export function OrderActions({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
       {steps.map((step) => (
-        <form key={step.status} action={statusAction}>
+        <form key={step.status} action={statusAction} className="w-full sm:w-auto">
           <input type="hidden" name="orderId" value={orderId} />
           <input type="hidden" name="status" value={step.status} />
           <Button
@@ -84,6 +84,7 @@ export function OrderActions({
             size="sm"
             variant={step.variant ?? "default"}
             disabled={statusPending}
+            className="w-full sm:w-auto"
           >
             {statusPending ? <Loader2 className="size-3.5 animate-spin" /> : null}
             {step.label}
@@ -92,9 +93,15 @@ export function OrderActions({
       ))}
 
       {paymentStatus === "unpaid" ? (
-        <form action={paidAction}>
+        <form action={paidAction} className="w-full sm:w-auto">
           <input type="hidden" name="orderId" value={orderId} />
-          <Button type="submit" size="sm" variant="secondary" disabled={paidPending}>
+          <Button
+            type="submit"
+            size="sm"
+            variant="secondary"
+            disabled={paidPending}
+            className="w-full sm:w-auto"
+          >
             {paidPending ? <Loader2 className="size-3.5 animate-spin" /> : null}
             Mark paid
           </Button>

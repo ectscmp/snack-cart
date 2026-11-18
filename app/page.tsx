@@ -56,14 +56,19 @@ export default function HomePage() {
                 Order during your class window, pay online or at delivery, and
                 THM students bring it straight to your room.
               </p>
-              <div className="mt-8 flex flex-wrap items-center gap-3">
-                <Button asChild size="lg">
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+                <Button asChild size="lg" className="w-full sm:w-auto">
                   <Link href="/menu">
                     Browse the menu
                     <ArrowRight className="size-4" />
                   </Link>
                 </Button>
-                <Button asChild size="lg" variant="outline">
+                <Button
+                  asChild
+                  size="lg"
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                >
                   <Link href="/orders">Track an order</Link>
                 </Button>
               </div>

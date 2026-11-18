@@ -120,7 +120,7 @@ async function Receipt({ params }: { params: Promise<{ id: string }> }) {
           <tbody>
             {order.items.map((item) => (
               <tr key={item.id} className="border-b border-neutral-200">
-                <td className="py-2">
+                <td className="break-words py-2 pr-2">
                   {item.productName}
                   {item.optionLabel ? (
                     <span className="block text-xs text-neutral-500">
@@ -128,11 +128,13 @@ async function Receipt({ params }: { params: Promise<{ id: string }> }) {
                     </span>
                   ) : null}
                 </td>
-                <td className="py-2 text-right">{item.quantity}</td>
-                <td className="py-2 text-right">
+                <td className="whitespace-nowrap py-2 text-right">
+                  {item.quantity}
+                </td>
+                <td className="whitespace-nowrap py-2 text-right">
                   {formatCents(item.unitPriceCents)}
                 </td>
-                <td className="py-2 text-right">
+                <td className="whitespace-nowrap py-2 text-right">
                   {formatCents(item.lineTotalCents)}
                 </td>
               </tr>

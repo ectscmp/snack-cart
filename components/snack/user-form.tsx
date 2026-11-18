@@ -30,7 +30,7 @@ export function UserForm({
   }, [state]);
 
   return (
-    <form action={formAction} className="space-y-3">
+    <form action={formAction} className="min-w-0 space-y-3">
       <input type="hidden" name="userId" value={user.id} />
 
       <div className="space-y-2">
@@ -39,7 +39,7 @@ export function UserForm({
           id={`class-${user.id}`}
           name="classId"
           defaultValue={user.classId ?? ""}
-          className="h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm"
+          className="h-9 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 text-sm"
         >
           <option value="">No class</option>
           {classes.map((entry) => (
@@ -73,7 +73,12 @@ export function UserForm({
         <p className="text-sm text-destructive">{state.message}</p>
       ) : null}
 
-      <Button type="submit" size="sm" disabled={pending}>
+      <Button
+        type="submit"
+        size="sm"
+        className="w-full sm:w-auto"
+        disabled={pending}
+      >
         {pending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
         Save
       </Button>

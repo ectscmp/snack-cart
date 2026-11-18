@@ -41,7 +41,7 @@ export default function StaffProductDetailPage({
   return (
     <div className="flex min-h-svh flex-col">
       <SiteHeader />
-      <main className="mx-auto w-full max-w-5xl flex-1 space-y-6 px-4 py-10">
+      <main className="mx-auto w-full max-w-5xl flex-1 space-y-6 px-4 py-8 sm:py-10">
         <Suspense fallback={<Skeleton className="h-80 w-full rounded-xl" />}>
           <ProductDetail params={params} />
         </Suspense>
@@ -74,14 +74,16 @@ async function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
 
   return (
     <>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Button asChild variant="ghost" size="sm" className="-ml-2">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <Button asChild variant="ghost" size="sm" className="-ml-2 self-start">
           <Link href="/staff/products">
             <ArrowLeft className="size-4" />
             Products
           </Link>
         </Button>
-        <StaffNav />
+        <div className="w-full min-w-0 lg:w-auto">
+          <StaffNav />
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -101,7 +103,7 @@ async function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
           </CardContent>
         </Card>
 
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Adjust stock</CardTitle>
@@ -110,7 +112,7 @@ async function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <StockForm productId={product.id} />
+              <StockForm productId={product.id} layout="stacked" />
             </CardContent>
           </Card>
 
@@ -124,13 +126,15 @@ async function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
               ) : (
                 <ul className="space-y-2 text-sm">
                   {movements.map((movement) => (
-                    <li key={movement.id} className="flex justify-between gap-2">
-                      <span className="capitalize text-muted-foreground">
+                    <li key={movement.id} className="flex justify-between gap-3">
+                      <span className="min-w-0 break-words capitalize text-muted-foreground">
                         {movement.reason}
                       </span>
                       <span
                         className={
-                          movement.delta > 0 ? "text-emerald-600" : "text-destructive"
+                          movement.delta > 0
+                            ? "shrink-0 tabular-nums text-emerald-600"
+                            : "shrink-0 tabular-nums text-destructive"
                         }
                       >
                         {movement.delta > 0 ? "+" : ""}

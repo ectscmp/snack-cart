@@ -34,9 +34,9 @@ export default function AdminUsersPage({
   return (
     <div className="flex min-h-svh flex-col">
       <SiteHeader />
-      <main className="mx-auto w-full max-w-5xl flex-1 space-y-6 px-4 py-10">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
+      <main className="mx-auto w-full max-w-5xl flex-1 space-y-6 px-4 py-8 sm:py-10">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div className="min-w-0">
             <h1 className="text-3xl font-semibold tracking-tight">Users</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               Everyone signs in as a customer. Add staff or admin roles here.
@@ -68,9 +68,14 @@ async function UsersContent({
 
   return (
     <div className="space-y-4">
-      <form method="get" className="flex max-w-md gap-2">
-        <Input name="q" defaultValue={q} placeholder="Search name or email" />
-        <Button type="submit" variant="outline">
+      <form method="get" className="flex w-full max-w-md flex-col gap-2 sm:flex-row">
+        <Input
+          name="q"
+          defaultValue={q}
+          placeholder="Search name or email"
+          className="min-w-0"
+        />
+        <Button type="submit" variant="outline" className="w-full sm:w-auto">
           <Search className="size-4" />
           Search
         </Button>
@@ -83,13 +88,20 @@ async function UsersContent({
       ) : (
         <div className="grid gap-3 lg:grid-cols-2">
           {users.map((user) => (
-            <Card key={user.id}>
+            <Card key={user.id} className="min-w-0">
               <CardHeader>
-                <CardTitle className="text-base">{user.name}</CardTitle>
-                <CardDescription className="flex flex-wrap items-center gap-1.5">
-                  <span className="truncate">{user.email}</span>
+                <CardTitle className="text-base break-words">
+                  {user.name}
+                </CardTitle>
+                <CardDescription className="flex min-w-0 flex-wrap items-center gap-1.5">
+                  <span className="min-w-0 break-words">{user.email}</span>
                   {user.className ? (
-                    <Badge variant="secondary">{user.className}</Badge>
+                    <Badge
+                      variant="secondary"
+                      className="h-auto max-w-full whitespace-normal"
+                    >
+                      {user.className}
+                    </Badge>
                   ) : (
                     <Badge variant="outline">No class</Badge>
                   )}

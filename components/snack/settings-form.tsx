@@ -24,7 +24,7 @@ export function SettingsForm({ settings }: { settings: Settings }) {
   }, [state]);
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form action={formAction} className="min-w-0 space-y-4">
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="schoolName">School name</Label>
@@ -130,7 +130,11 @@ export function SettingsForm({ settings }: { settings: Settings }) {
         <p className="text-sm text-destructive">{state.message}</p>
       ) : null}
 
-      <Button type="submit" disabled={pending}>
+      <Button
+        type="submit"
+        className="w-full sm:w-auto"
+        disabled={pending}
+      >
         {pending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
         Save settings
       </Button>

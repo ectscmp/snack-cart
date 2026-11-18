@@ -9,9 +9,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { idleState } from "@/lib/action-state";
 
-export function StockForm({ productId }: { productId: number }) {
+export function StockForm({
+  productId,
+  layout = "inline",
+}: {
+  productId: number;
+  layout?: "inline" | "stacked";
+}) {
   const [state, formAction, pending] = useActionState(adjustStockAction, idleState);
   const formRef = useRef<HTMLFormElement>(null);
+  const stacked = layout === "stacked";
 
   useEffect(() => {
     if (state.status === "success") {
@@ -23,22 +30,36 @@ export function StockForm({ productId }: { productId: number }) {
   }, [state]);
 
   return (
-    <form ref={formRef} action={formAction} className="flex flex-wrap items-center gap-2">
+    <form
+      ref={formRef}
+      action={formAction}
+      className={
+        stacked
+          ? "flex flex-col gap-2"
+          : "flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center"
+      }
+    >
       <input type="hidden" name="productId" value={productId} />
       <Input
         name="delta"
         type="number"
         placeholder="+10 or -2"
-        className="w-28"
+        className={stacked ? "w-full" : "w-full sm:w-28"}
         required
       />
       <Input
         name="note"
         placeholder="Note (optional)"
-        className="w-40"
+        className={stacked ? "w-full" : "w-full sm:w-40"}
         maxLength={120}
       />
-      <Button type="submit" size="sm" variant="outline" disabled={pending}>
+      <Button
+        type="submit"
+        size="sm"
+        variant="outline"
+        disabled={pending}
+        className={stacked ? "w-full" : "w-full sm:w-auto"}
+      >
         {pending ? <Loader2 className="size-3.5 animate-spin" /> : <SlidersHorizontal className="size-3.5" />}
         Adjust
       </Button>

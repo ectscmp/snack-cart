@@ -46,9 +46,9 @@ export default function AdminPage() {
   return (
     <div className="flex min-h-svh flex-col">
       <SiteHeader />
-      <main className="mx-auto w-full max-w-6xl flex-1 space-y-6 px-4 py-10">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
+      <main className="mx-auto w-full max-w-6xl flex-1 space-y-6 px-4 py-8 sm:py-10">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div className="min-w-0">
             <h1 className="text-3xl font-semibold tracking-tight">Admin</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               School-wide snack cart controls.
@@ -128,16 +128,16 @@ async function Overview() {
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map((card) => (
-          <Card key={card.title}>
+          <Card key={card.title} className="min-w-0">
             <CardHeader>
               <CardDescription className="flex items-center gap-2">
-                <card.icon className="size-4" />
+                <card.icon className="size-4 shrink-0" />
                 {card.title}
               </CardDescription>
               <CardTitle className="text-3xl">{card.value}</CardTitle>
             </CardHeader>
-            <CardContent className="flex items-center justify-between gap-2">
-              <span className="text-xs text-muted-foreground">
+            <CardContent className="flex flex-wrap items-center justify-between gap-2">
+              <span className="min-w-0 text-xs break-words text-muted-foreground">
                 {card.description}
               </span>
               <Button asChild variant="ghost" size="sm">
@@ -156,38 +156,58 @@ async function Overview() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-3xl font-semibold">
+          <p className="text-3xl font-semibold break-words">
             {formatCents(stats.revenueCents)}
           </p>
         </CardContent>
       </Card>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Button asChild variant="outline" className="h-auto justify-start py-3">
+        <Button
+          asChild
+          variant="outline"
+          className="h-auto w-full justify-start py-3 whitespace-normal"
+        >
           <Link href="/admin/schedule">
             <CalendarClock className="size-4" />
             Ordering windows
           </Link>
         </Button>
-        <Button asChild variant="outline" className="h-auto justify-start py-3">
+        <Button
+          asChild
+          variant="outline"
+          className="h-auto w-full justify-start py-3 whitespace-normal"
+        >
           <Link href="/staff/categories">
             <Tags className="size-4" />
             Categories
           </Link>
         </Button>
-        <Button asChild variant="outline" className="h-auto justify-start py-3">
+        <Button
+          asChild
+          variant="outline"
+          className="h-auto w-full justify-start py-3 whitespace-normal"
+        >
           <Link href="/admin/users">
             <Users className="size-4" />
             Roles &amp; classes
           </Link>
         </Button>
-        <Button asChild variant="outline" className="h-auto justify-start py-3">
+        <Button
+          asChild
+          variant="outline"
+          className="h-auto w-full justify-start py-3 whitespace-normal"
+        >
           <Link href="/admin/roles">
             <ShieldCheck className="size-4" />
             What each role can see
           </Link>
         </Button>
-        <Button asChild variant="outline" className="h-auto justify-start py-3">
+        <Button
+          asChild
+          variant="outline"
+          className="h-auto w-full justify-start py-3 whitespace-normal"
+        >
           <Link href="/admin/settings">
             <School className="size-4" />
             School settings

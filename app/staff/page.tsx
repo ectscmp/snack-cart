@@ -35,15 +35,17 @@ export default function StaffQueuePage() {
   return (
     <div className="flex min-h-svh flex-col">
       <SiteHeader />
-      <main className="mx-auto w-full max-w-6xl flex-1 space-y-6 px-4 py-10">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
+      <main className="mx-auto w-full max-w-6xl flex-1 space-y-6 px-4 py-8 sm:py-10">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div className="min-w-0">
             <h1 className="text-3xl font-semibold tracking-tight">Delivery queue</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               Open orders grouped by room. Update status as you deliver.
             </p>
           </div>
-          <StaffNav />
+          <div className="w-full min-w-0 lg:w-auto">
+            <StaffNav />
+          </div>
         </div>
 
         <Suspense fallback={<Skeleton className="h-80 w-full rounded-xl" />}>
@@ -84,8 +86,8 @@ async function Queue() {
 
         return (
           <section key={room} className="space-y-3">
-            <h2 className="flex items-center gap-2 text-lg font-semibold">
-              <MapPin className="size-4 text-muted-foreground" />
+            <h2 className="flex flex-wrap items-center gap-2 text-lg font-semibold">
+              <MapPin className="size-4 shrink-0 text-muted-foreground" />
               Room {room}
               <Badge variant="outline">{roomOrders.length}</Badge>
             </h2>
@@ -93,10 +95,10 @@ async function Queue() {
               {roomOrders.map((order) => (
                 <Card key={order.id}>
                   <CardHeader>
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0">
                         <CardTitle className="text-base">Order #{order.id}</CardTitle>
-                        <CardDescription>
+                        <CardDescription className="break-words">
                           {order.customerName} · {order.className ?? "No class"}
                         </CardDescription>
                       </div>
@@ -109,25 +111,27 @@ async function Queue() {
                   <CardContent className="space-y-3">
                     <ul className="space-y-1 text-sm">
                       {order.items.map((item) => (
-                        <li key={item.id} className="flex justify-between gap-2">
-                          <span>
+                        <li key={item.id} className="flex justify-between gap-3">
+                          <span className="min-w-0 break-words">
                             {item.quantity} × {item.productName}
                             {item.optionLabel ? ` (${item.optionLabel})` : ""}
                           </span>
-                          <span className="tabular-nums text-muted-foreground">
+                          <span className="shrink-0 tabular-nums text-muted-foreground">
                             {formatCents(item.lineTotalCents)}
                           </span>
                         </li>
                       ))}
                     </ul>
                     {order.note ? (
-                      <p className="rounded-md bg-muted/50 px-2.5 py-1.5 text-xs">
+                      <p className="break-words rounded-md bg-muted/50 px-2.5 py-1.5 text-xs">
                         {order.note}
                       </p>
                     ) : null}
-                    <div className="flex items-center justify-between border-t pt-2 text-sm font-semibold">
+                    <div className="flex items-center justify-between gap-2 border-t pt-2 text-sm font-semibold">
                       <span>Total</span>
-                      <span>{formatCents(order.subtotalCents)}</span>
+                      <span className="tabular-nums">
+                        {formatCents(order.subtotalCents)}
+                      </span>
                     </div>
                     <OrderActions
                       orderId={order.id}

@@ -40,7 +40,7 @@ export default function OrderDetailPage({
   return (
     <div className="flex min-h-svh flex-col">
       <SiteHeader />
-      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10">
+      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:py-10">
         <Suspense fallback={<Skeleton className="h-80 w-full rounded-xl" />}>
           <OrderDetail params={params} />
         </Suspense>
@@ -144,11 +144,11 @@ async function OrderDetail({
             <ul className="divide-y text-sm">
               {order.items.map((item) => (
                 <li key={item.id} className="flex justify-between gap-3 py-2">
-                  <span>
+                  <span className="min-w-0 break-words">
                     {item.quantity} × {item.productName}
                     {item.optionLabel ? ` (${item.optionLabel})` : ""}
                   </span>
-                  <span className="tabular-nums">
+                  <span className="shrink-0 tabular-nums">
                     {formatCents(item.lineTotalCents)}
                   </span>
                 </li>
@@ -160,8 +160,13 @@ async function OrderDetail({
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <Button asChild variant="outline" size="sm">
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="w-full sm:w-auto"
+            >
               <Link href={`/orders/${order.id}/receipt`}>
                 <ReceiptText className="size-4" />
                 Print receipt
@@ -181,9 +186,9 @@ async function OrderDetail({
             {order.events.map((event) => (
               <li key={event.id} className="flex gap-3 text-sm">
                 <span className="mt-1.5 size-2 shrink-0 rounded-full bg-primary" />
-                <div>
+                <div className="min-w-0">
                   <p className="font-medium">{statusLabel(event.status)}</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="break-words text-xs text-muted-foreground">
                     {formatDateTime(event.createdAt)}
                     {event.actorName ? ` · ${event.actorName}` : ""}
                     {event.note ? ` · ${event.note}` : ""}

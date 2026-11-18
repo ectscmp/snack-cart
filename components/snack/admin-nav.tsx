@@ -11,5 +11,9 @@ const links = [
 ];
 
 export function AdminNav() {
-  return <SectionNav links={links} root="/admin" />;
+  return (
+    <div className="w-full min-w-0 lg:w-auto">
+      <SectionNav links={links} root="/admin" />
+    </div>
+  );
 }

@@ -31,15 +31,17 @@ export default function StaffOrdersPage() {
   return (
     <div className="flex min-h-svh flex-col">
       <SiteHeader />
-      <main className="mx-auto w-full max-w-5xl flex-1 space-y-6 px-4 py-10">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
+      <main className="mx-auto w-full max-w-5xl flex-1 space-y-6 px-4 py-8 sm:py-10">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div className="min-w-0">
             <h1 className="text-3xl font-semibold tracking-tight">Order history</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               Delivered and cancelled orders.
             </p>
           </div>
-          <StaffNav />
+          <div className="w-full min-w-0 lg:w-auto">
+            <StaffNav />
+          </div>
         </div>
 
         <Suspense fallback={<Skeleton className="h-64 w-full rounded-xl" />}>
@@ -70,10 +72,10 @@ async function HistoryContent() {
       {orders.map((order) => (
         <Card key={order.id}>
           <CardHeader>
-            <div className="flex flex-wrap items-start justify-between gap-2">
-              <div>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
                 <CardTitle className="text-base">Order #{order.id}</CardTitle>
-                <CardDescription>
+                <CardDescription className="break-words">
                   {order.customerName} · Room {order.deliveryRoom} ·{" "}
                   {formatCents(order.subtotalCents)}
                 </CardDescription>
@@ -84,8 +86,8 @@ async function HistoryContent() {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="flex items-center justify-between gap-3">
-            <p className="line-clamp-1 text-sm text-muted-foreground">
+          <CardContent className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <p className="min-w-0 text-sm break-words text-muted-foreground sm:line-clamp-1">
               {order.items
                 .map(
                   (item) =>
@@ -97,7 +99,7 @@ async function HistoryContent() {
             </p>
             <Link
               href={`/orders/${order.id}`}
-              className="shrink-0 text-sm font-medium hover:underline"
+              className="shrink-0 self-start text-sm font-medium hover:underline sm:self-auto"
             >
               Details
             </Link>
