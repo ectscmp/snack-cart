@@ -1,5 +1,6 @@
 import { getDb } from "./connection";
 import {
+  addWhippedCream,
   findProductOption,
   getProductOptionSet,
 } from "../product-options";
@@ -113,6 +114,7 @@ export function addToCart(
   productId: number,
   quantity: number,
   optionValue?: string | null,
+  addons?: { whippedCream?: boolean },
 ): void {
   const database = getDb();
   ensureCart(userId);
@@ -133,7 +135,12 @@ export function addToCart(
     throw new Error("That snack is sold out.");
   }
 
-  const option = resolveCartOption(product.option_set, optionValue);
+  let option = resolveCartOption(product.option_set, optionValue);
+
+  if (addons?.whippedCream && product.option_set === "coffee") {
+    option = addWhippedCream(option);
+  }
+
   const requested = Math.max(1, quantity);
 
   const totals = database

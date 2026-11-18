@@ -32,7 +32,9 @@ export async function addToCartAction(
   }
 
   try {
-    addToCart(user.id, productId.data, quantity.data || 1, optionValue.data);
+    addToCart(user.id, productId.data, quantity.data || 1, optionValue.data, {
+      whippedCream: formData.get("whippedCream") === "on",
+    });
   } catch (error) {
     return {
       status: "error",

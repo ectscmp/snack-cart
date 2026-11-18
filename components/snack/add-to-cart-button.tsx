@@ -10,7 +10,10 @@ import { addToCartAction } from "@/app/actions/cart";
 import { Button } from "@/components/ui/button";
 import { idleState } from "@/lib/action-state";
 import { formatCents } from "@/lib/money";
-import type { ProductOptionSet } from "@/lib/product-options";
+import {
+  COFFEE_WHIPPED_CREAM,
+  type ProductOptionSet,
+} from "@/lib/product-options";
 
 export function AddToCartButton({
   productId,
@@ -31,6 +34,7 @@ export function AddToCartButton({
   const [optionValue, setOptionValue] = useState(
     optionSet?.options.find((option) => option.value === "none")?.value ?? "",
   );
+  const [whippedCream, setWhippedCream] = useState(false);
 
   useEffect(() => {
     if (state.status === "success") {
@@ -86,6 +90,22 @@ export function AddToCartButton({
             ))}
           </select>
         </div>
+      ) : null}
+
+      {optionSet?.id === "coffee" ? (
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            name="whippedCream"
+            checked={whippedCream}
+            onChange={(event) => setWhippedCream(event.target.checked)}
+            className="size-4 rounded border"
+          />
+          Add {COFFEE_WHIPPED_CREAM.label.toLowerCase()}
+          {COFFEE_WHIPPED_CREAM.priceDeltaCents > 0
+            ? ` (+${formatCents(COFFEE_WHIPPED_CREAM.priceDeltaCents)})`
+            : ""}
+        </label>
       ) : null}
 
       {!canOrder ? (

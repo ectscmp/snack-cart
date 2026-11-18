@@ -104,6 +104,29 @@ export const PRODUCT_OPTION_SETS: ProductOptionSet[] = [
   },
 ];
 
+/**
+ * Whipped cream is an add-on, not a syrup choice, so it can be combined with
+ * pumpkin or hazelnut. Change `priceDeltaCents` if it should have an upcharge.
+ */
+export const COFFEE_WHIPPED_CREAM: ProductOptionValue = {
+  value: "whipped-cream",
+  label: "Whipped cream",
+  priceDeltaCents: 0,
+};
+
+export function addWhippedCream(
+  option: ProductOptionValue,
+): ProductOptionValue {
+  return {
+    value: `${option.value}+${COFFEE_WHIPPED_CREAM.value}`,
+    label:
+      option.value === "none"
+        ? COFFEE_WHIPPED_CREAM.label
+        : `${option.label} + ${COFFEE_WHIPPED_CREAM.label}`,
+    priceDeltaCents: option.priceDeltaCents + COFFEE_WHIPPED_CREAM.priceDeltaCents,
+  };
+}
+
 export function getProductOptionSet(
   id: string | null | undefined,
 ): ProductOptionSet | null {

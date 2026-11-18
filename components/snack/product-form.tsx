@@ -193,6 +193,11 @@ export function ProductForm({
                   </li>
                 ))}
               </ul>
+              {selectedOptionSet.id === "coffee" ? (
+                <p className="mt-1 text-muted-foreground">
+                  Coffee products also get an “Add whipped cream” checkbox.
+                </p>
+              ) : null}
             </div>
           ) : (
             <p className="text-xs text-muted-foreground">
