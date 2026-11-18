@@ -12,10 +12,12 @@ import { Button } from "@/components/ui/button";
 
 export function CartLineControls({
   productId,
+  optionValue,
   quantity,
   max,
 }: {
   productId: number;
+  optionValue: string;
   quantity: number;
   max: number;
 }) {
@@ -23,7 +25,7 @@ export function CartLineControls({
 
   function change(next: number) {
     startTransition(async () => {
-      const result = await setCartQuantityDirect(productId, next);
+      const result = await setCartQuantityDirect(productId, optionValue, next);
 
       if (result.status === "error") {
         toast.error(result.message ?? "Could not update your cart.");
@@ -33,7 +35,7 @@ export function CartLineControls({
 
   function remove() {
     startTransition(async () => {
-      const result = await removeCartItemDirect(productId);
+      const result = await removeCartItemDirect(productId, optionValue);
 
       if (result.status === "error") {
         toast.error(result.message ?? "Could not remove that snack.");

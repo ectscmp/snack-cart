@@ -6,6 +6,7 @@ import { AddToCartButton } from "@/components/snack/add-to-cart-button";
 import { Button } from "@/components/ui/button";
 import type { Product } from "@/lib/db";
 import { formatCents } from "@/lib/money";
+import { getProductOptionSet } from "@/lib/product-options";
 
 export function ProductCard({
   product,
@@ -18,6 +19,7 @@ export function ProductCard({
 }) {
   const soldOut = product.stockQuantity <= 0;
   const low = !soldOut && product.stockQuantity <= product.lowStockThreshold;
+  const optionSet = getProductOptionSet(product.optionSet);
 
   return (
     <article className="flex h-full flex-col overflow-hidden rounded-xl border bg-card transition-colors hover:border-foreground/20">
@@ -64,7 +66,12 @@ export function ProductCard({
           {product.description ?? "A fresh pick from the cart."}
         </p>
 
-        <div className="mt-auto flex items-center justify-between gap-3 pt-1">
+        <div
+          className={cn(
+            "mt-auto flex gap-3 pt-1",
+            optionSet ? "flex-col" : "items-center justify-between",
+          )}
+        >
           <span
             className={cn(
               "text-xs",
@@ -91,7 +98,11 @@ export function ProductCard({
               Closed
             </Button>
           ) : (
-            <AddToCartButton productId={product.id} disabled={soldOut} />
+            <AddToCartButton
+              productId={product.id}
+              disabled={soldOut}
+              optionSet={optionSet}
+            />
           )}
         </div>
       </div>

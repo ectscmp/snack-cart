@@ -114,10 +114,17 @@ async function PickList({ params }: { params: Promise<{ classId: string }> }) {
             <tbody>
               {pickList.items.map((item) => (
                 <tr
-                  key={item.productName}
+                  key={`${item.productName}:${item.optionLabel}`}
                   className="border-b border-neutral-200"
                 >
-                  <td className="py-2 font-medium">{item.productName}</td>
+                  <td className="py-2 font-medium">
+                    {item.productName}
+                    {item.optionLabel ? (
+                      <span className="block text-xs font-normal text-neutral-500">
+                        {item.optionLabel}
+                      </span>
+                    ) : null}
+                  </td>
                   <td className="py-2 text-right text-lg font-semibold tabular-nums">
                     {item.quantity}
                   </td>
@@ -173,6 +180,7 @@ async function PickList({ params }: { params: Promise<{ classId: string }> }) {
                     <li key={item.id} className="flex justify-between gap-2">
                       <span>
                         {item.quantity} × {item.productName}
+                        {item.optionLabel ? ` (${item.optionLabel})` : ""}
                       </span>
                       <span className="tabular-nums text-neutral-600">
                         {formatCents(item.lineTotalCents)}

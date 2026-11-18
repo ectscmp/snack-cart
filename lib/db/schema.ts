@@ -93,9 +93,12 @@ export function migrate(database: DatabaseSync) {
     CREATE TABLE IF NOT EXISTS cart_items (
       cart_id TEXT NOT NULL REFERENCES carts(user_id) ON DELETE CASCADE,
       product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+      option_value TEXT NOT NULL DEFAULT '',
+      option_label TEXT NOT NULL DEFAULT '',
+      option_price_cents INTEGER NOT NULL DEFAULT 0,
       quantity INTEGER NOT NULL CHECK (quantity > 0),
       added_at TEXT NOT NULL DEFAULT (datetime('now')),
-      PRIMARY KEY (cart_id, product_id)
+      PRIMARY KEY (cart_id, product_id, option_value)
     );
 
     CREATE TABLE IF NOT EXISTS orders (
@@ -222,6 +225,14 @@ export function migrate(database: DatabaseSync) {
     "INTEGER REFERENCES categories(id) ON DELETE SET NULL",
   );
 
+  // Customer-facing choices (coffee syrups, candy bars, drink flavors).
+  ensureColumn(database, "products", "option_set", "TEXT");
+
+  // The chosen option is snapshotted on the cart line so the cart total and
+  // the final order keep the upcharge even if staff later change the product.
+  ensureCartItemOptions(database);
+  ensureColumn(database, "order_items", "option_label", "TEXT NOT NULL DEFAULT ''");
+
   // Safe to index now that `parent_id` exists on both new and migrated tables.
   database.exec(`
     CREATE INDEX IF NOT EXISTS categories_parent_idx ON categories (parent_id);
@@ -239,6 +250,69 @@ export function migrate(database: DatabaseSync) {
   database
     .prepare("INSERT OR IGNORE INTO schema_migrations (version) VALUES (1)")
     .run();
+}
+
+/**
+ * Cart lines are keyed by product *and* chosen option so one product can sit
+ * in the cart twice (for example a pumpkin coffee and a hazelnut coffee).
+ * Older databases have a two-column primary key, so they are rebuilt in place.
+ */
+function ensureCartItemOptions(database: DatabaseSync) {
+  const getColumns = () =>
+    database.prepare("PRAGMA table_info(cart_items)").all() as Array<{
+      name: string;
+      pk: number;
+    }>;
+
+  const existing = getColumns();
+  const has = (name: string) => existing.some((column) => column.name === name);
+
+  if (!has("option_value")) {
+    database.exec(
+      "ALTER TABLE cart_items ADD COLUMN option_value TEXT NOT NULL DEFAULT '';",
+    );
+  }
+
+  if (!has("option_label")) {
+    database.exec(
+      "ALTER TABLE cart_items ADD COLUMN option_label TEXT NOT NULL DEFAULT '';",
+    );
+  }
+
+  if (!has("option_price_cents")) {
+    database.exec(
+      "ALTER TABLE cart_items ADD COLUMN option_price_cents INTEGER NOT NULL DEFAULT 0;",
+    );
+  }
+
+  const primaryKey = getColumns().filter((column) => column.pk > 0);
+
+  if (primaryKey.length === 3) {
+    return;
+  }
+
+  database.exec(`
+    DROP TABLE IF EXISTS cart_items_rebuild;
+    CREATE TABLE cart_items_rebuild (
+      cart_id TEXT NOT NULL REFERENCES carts(user_id) ON DELETE CASCADE,
+      product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+      option_value TEXT NOT NULL DEFAULT '',
+      option_label TEXT NOT NULL DEFAULT '',
+      option_price_cents INTEGER NOT NULL DEFAULT 0,
+      quantity INTEGER NOT NULL CHECK (quantity > 0),
+      added_at TEXT NOT NULL DEFAULT (datetime('now')),
+      PRIMARY KEY (cart_id, product_id, option_value)
+    );
+    INSERT OR IGNORE INTO cart_items_rebuild
+      (cart_id, product_id, option_value, option_label, option_price_cents,
+       quantity, added_at)
+    SELECT cart_id, product_id, option_value, option_label, option_price_cents,
+           quantity, added_at
+    FROM cart_items;
+    DROP TABLE cart_items;
+    ALTER TABLE cart_items_rebuild RENAME TO cart_items;
+    CREATE INDEX IF NOT EXISTS cart_items_cart_idx ON cart_items (cart_id);
+  `);
 }
 
 function ensureColumn(

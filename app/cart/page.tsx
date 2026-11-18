@@ -82,15 +82,24 @@ async function CartContent() {
         </CardHeader>
         <CardContent className="divide-y">
           {cart.items.map((item) => (
-            <div key={item.productId} className="flex items-center gap-3 py-3">
+            <div
+              key={`${item.productId}:${item.optionValue}`}
+              className="flex items-center gap-3 py-3"
+            >
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{item.name}</p>
+                {item.optionLabel ? (
+                  <p className="truncate text-xs text-muted-foreground">
+                    {item.optionLabel}
+                  </p>
+                ) : null}
                 <p className="text-xs text-muted-foreground">
                   {formatCents(item.priceCents)} each
                 </p>
               </div>
               <CartLineControls
                 productId={item.productId}
+                optionValue={item.optionValue}
                 quantity={item.quantity}
                 max={item.stockQuantity}
               />

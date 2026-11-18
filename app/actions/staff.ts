@@ -20,6 +20,7 @@ import {
   updateProduct,
 } from "@/lib/db";
 import { parsePriceToCents } from "@/lib/money";
+import { normalizeProductOptionSet } from "@/lib/product-options";
 import type { ActionState } from "@/lib/action-state";
 
 const productIdSchema = z.coerce.number().int().positive();
@@ -32,6 +33,7 @@ const productSchema = z.object({
   categoryId: z.coerce.number().int().positive(),
   imageUrl: z.string().trim().max(500).optional(),
   lowStockThreshold: z.coerce.number().int().min(0).max(100000),
+  optionSet: z.string().trim().max(40).optional(),
 });
 
 async function readProductForm(formData: FormData) {
@@ -42,6 +44,7 @@ async function readProductForm(formData: FormData) {
     categoryId: formData.get("categoryId"),
     imageUrl: formData.get("imageUrl") ?? undefined,
     lowStockThreshold: formData.get("lowStockThreshold") ?? 5,
+    optionSet: formData.get("optionSet") ?? undefined,
   });
 
   if (!parsed.success) {
@@ -87,6 +90,7 @@ async function readProductForm(formData: FormData) {
       categoryId: category.id,
       imageUrl,
       lowStockThreshold: parsed.data.lowStockThreshold,
+      optionSet: normalizeProductOptionSet(parsed.data.optionSet),
     },
   } as const;
 }
@@ -317,6 +321,10 @@ export async function importProductsAction(
     image_url: "imageUrl",
     imageurl: "imageUrl",
     image: "imageUrl",
+    option_set: "optionSet",
+    optionset: "optionSet",
+    options: "optionSet",
+    option: "optionSet",
   };
 
   const normalizedHeader = header.map((value) => aliases[value] ?? value);
@@ -371,6 +379,7 @@ export async function importProductsAction(
     const thresholdIndex = indexOf("lowStockThreshold");
     const activeIndex = indexOf("active");
     const imageIndex = indexOf("imageUrl");
+    const optionSetIndex = indexOf("optionSet");
 
     const activeRaw = activeIndex >= 0 ? (row[activeIndex] ?? "").trim().toLowerCase() : "";
 
@@ -386,6 +395,10 @@ export async function importProductsAction(
           ? true
           : !["false", "0", "no", "inactive"].includes(activeRaw),
       imageUrl: imageIndex >= 0 ? (row[imageIndex] ?? "").trim() : "",
+      optionSet:
+        optionSetIndex >= 0
+          ? normalizeProductOptionSet(row[optionSetIndex])
+          : null,
       createdBy: user.id,
     };
   });

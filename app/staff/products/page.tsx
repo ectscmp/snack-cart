@@ -31,6 +31,7 @@ import {
 import { requireStaff } from "@/lib/auth";
 import { listCategories, listProducts } from "@/lib/db";
 import { formatCents } from "@/lib/money";
+import { getProductOptionSet } from "@/lib/product-options";
 
 export const metadata: Metadata = {
   title: "Products",
@@ -94,6 +95,13 @@ async function ProductsContent() {
                     <p className="text-xs text-muted-foreground">
                       {product.categoryPath}
                     </p>
+                    {product.optionSet ? (
+                      <p className="text-xs text-muted-foreground">
+                        Choices:{" "}
+                        {getProductOptionSet(product.optionSet)?.label ??
+                          product.optionSet}
+                      </p>
+                    ) : null}
                   </TableCell>
                   <TableCell>{formatCents(product.priceCents)}</TableCell>
                   <TableCell>

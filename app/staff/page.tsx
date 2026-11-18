@@ -112,6 +112,7 @@ async function Queue() {
                         <li key={item.id} className="flex justify-between gap-2">
                           <span>
                             {item.quantity} × {item.productName}
+                            {item.optionLabel ? ` (${item.optionLabel})` : ""}
                           </span>
                           <span className="tabular-nums text-muted-foreground">
                             {formatCents(item.lineTotalCents)}

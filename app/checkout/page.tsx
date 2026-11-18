@@ -112,9 +112,13 @@ async function CheckoutContent() {
         <CardContent className="space-y-3">
           <ul className="space-y-2 text-sm">
             {cart.items.map((item) => (
-              <li key={item.productId} className="flex justify-between gap-2">
+              <li
+                key={`${item.productId}:${item.optionValue}`}
+                className="flex justify-between gap-2"
+              >
                 <span className="min-w-0 truncate">
                   {item.quantity} × {item.name}
+                  {item.optionLabel ? ` (${item.optionLabel})` : ""}
                 </span>
                 <span className="shrink-0 tabular-nums">
                   {formatCents(item.lineTotalCents)}

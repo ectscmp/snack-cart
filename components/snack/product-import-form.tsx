@@ -38,9 +38,11 @@ export function ProductImportForm() {
         <p className="text-xs text-muted-foreground">
           Header row: <code className="font-mono">name, category, price</code>.
           Optional columns: <code className="font-mono">description, stock,
-          low_stock_threshold, active, image_url</code>. Missing categories are
+          low_stock_threshold, active, image_url, option_set</code>. Missing categories are
           created automatically. Price can be <code>1.50</code> or cents
-          (<code>150</code>) via <code>price_cents</code>.
+          (<code>150</code>) via <code>price_cents</code>. For{" "}
+          <code className="font-mono">option_set</code>, use coffee, candy_bar,
+          miss_vickies, alani, or bloom.
         </p>
       </div>
 

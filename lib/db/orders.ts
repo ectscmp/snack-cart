@@ -31,6 +31,7 @@ type OrderItemRow = {
   id: number;
   product_id: number | null;
   product_name: string;
+  option_label: string;
   unit_price_cents: number;
   quantity: number;
 };
@@ -57,6 +58,7 @@ function toOrderItem(row: OrderItemRow): OrderItem {
     id: row.id,
     productId: row.product_id,
     productName: row.product_name,
+    optionLabel: row.option_label,
     unitPriceCents: row.unit_price_cents,
     quantity: row.quantity,
     lineTotalCents: row.unit_price_cents * row.quantity,
@@ -111,7 +113,8 @@ export function getOrder(id: number): Order | null {
   const items = (
     database
       .prepare(
-        `SELECT id, product_id, product_name, unit_price_cents, quantity
+        `SELECT id, product_id, product_name, option_label, unit_price_cents,
+                quantity
          FROM order_items
          WHERE order_id = ?
          ORDER BY id`,
@@ -188,7 +191,8 @@ export function createOrderFromCart(
 
     const lines = database
       .prepare(
-        `SELECT ci.product_id, ci.quantity, p.name, p.price_cents,
+        `SELECT ci.product_id, ci.quantity, ci.option_label,
+                ci.option_price_cents, p.name, p.price_cents,
                 p.stock_quantity, p.active
          FROM cart_items ci
          JOIN products p ON p.id = ci.product_id
@@ -198,6 +202,8 @@ export function createOrderFromCart(
       .all(userId) as Array<{
       product_id: number;
       quantity: number;
+      option_label: string;
+      option_price_cents: number;
       name: string;
       price_cents: number;
       stock_quantity: number;
@@ -221,7 +227,8 @@ export function createOrderFromCart(
         );
       }
 
-      subtotal += line.price_cents * line.quantity;
+      subtotal +=
+        (line.price_cents + line.option_price_cents) * line.quantity;
     }
 
     const result = database
@@ -246,8 +253,9 @@ export function createOrderFromCart(
 
     const insertItem = database.prepare(
       `INSERT INTO order_items
-         (order_id, product_id, product_name, unit_price_cents, quantity)
-       VALUES (?, ?, ?, ?, ?)`,
+         (order_id, product_id, product_name, option_label, unit_price_cents,
+          quantity)
+       VALUES (?, ?, ?, ?, ?, ?)`,
     );
 
     const takeStock = database.prepare(
@@ -263,7 +271,14 @@ export function createOrderFromCart(
     );
 
     for (const line of lines) {
-      insertItem.run(id, line.product_id, line.name, line.price_cents, line.quantity);
+      insertItem.run(
+        id,
+        line.product_id,
+        line.name,
+        line.option_label,
+        line.price_cents + line.option_price_cents,
+        line.quantity,
+      );
 
       const update = takeStock.run(line.quantity, line.product_id, line.quantity);
 
@@ -448,8 +463,8 @@ export type ClassPickList = {
   classId: number;
   className: string;
   room: string | null;
-  /** Quantity per product across every open order for the class. */
-  items: Array<{ productName: string; quantity: number }>;
+  /** Quantity per product + option across every open order for the class. */
+  items: Array<{ productName: string; optionLabel: string; quantity: number }>;
   orders: Order[];
   orderCount: number;
   itemCount: number;
@@ -510,16 +525,23 @@ export function getClassPickList(classId: number): ClassPickList | null {
     .prepare("SELECT name, room FROM classes WHERE id = ?")
     .get(classId) as { name: string; room: string } | undefined;
 
-  const totals = new Map<string, number>();
+  const totals = new Map<
+    string,
+    { productName: string; optionLabel: string; quantity: number }
+  >();
   let itemCount = 0;
   let totalCents = 0;
 
   for (const order of orders) {
     for (const item of order.items) {
-      totals.set(
-        item.productName,
-        (totals.get(item.productName) ?? 0) + item.quantity,
-      );
+      const key = `${item.productName}\u0000${item.optionLabel}`;
+      const existing = totals.get(key);
+
+      totals.set(key, {
+        productName: item.productName,
+        optionLabel: item.optionLabel,
+        quantity: (existing?.quantity ?? 0) + item.quantity,
+      });
       itemCount += item.quantity;
       totalCents += item.lineTotalCents;
     }
@@ -529,10 +551,11 @@ export function getClassPickList(classId: number): ClassPickList | null {
     classId,
     className: orders[0].className ?? classRow?.name ?? `Class ${classId}`,
     room: classRow?.room || orders[0].deliveryRoom,
-    items: Array.from(totals, ([productName, quantity]) => ({
-      productName,
-      quantity,
-    })).sort((a, b) => a.productName.localeCompare(b.productName)),
+    items: Array.from(totals.values()).sort((a, b) =>
+      `${a.productName} ${a.optionLabel}`.localeCompare(
+        `${b.productName} ${b.optionLabel}`,
+      ),
+    ),
     orders,
     orderCount: orders.length,
     itemCount,

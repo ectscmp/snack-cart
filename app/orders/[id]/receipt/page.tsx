@@ -120,7 +120,14 @@ async function Receipt({ params }: { params: Promise<{ id: string }> }) {
           <tbody>
             {order.items.map((item) => (
               <tr key={item.id} className="border-b border-neutral-200">
-                <td className="py-2">{item.productName}</td>
+                <td className="py-2">
+                  {item.productName}
+                  {item.optionLabel ? (
+                    <span className="block text-xs text-neutral-500">
+                      {item.optionLabel}
+                    </span>
+                  ) : null}
+                </td>
                 <td className="py-2 text-right">{item.quantity}</td>
                 <td className="py-2 text-right">
                   {formatCents(item.unitPriceCents)}

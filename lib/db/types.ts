@@ -80,6 +80,8 @@ export type Product = {
   active: boolean;
   stockQuantity: number;
   lowStockThreshold: number;
+  /** Id of the customer choice dropdown, or null when the product has none. */
+  optionSet: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -100,7 +102,11 @@ export type InventoryMovement = {
 export type CartLine = {
   productId: number;
   name: string;
+  /** Unit price including the chosen option's upcharge. */
   priceCents: number;
+  optionValue: string;
+  optionLabel: string;
+  optionPriceCents: number;
   quantity: number;
   stockQuantity: number;
   imageUrl: string | null;
@@ -127,6 +133,7 @@ export type OrderItem = {
   id: number;
   productId: number | null;
   productName: string;
+  optionLabel: string;
   unitPriceCents: number;
   quantity: number;
   lineTotalCents: number;

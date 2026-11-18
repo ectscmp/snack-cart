@@ -146,6 +146,7 @@ async function OrderDetail({
                 <li key={item.id} className="flex justify-between gap-3 py-2">
                   <span>
                     {item.quantity} × {item.productName}
+                    {item.optionLabel ? ` (${item.optionLabel})` : ""}
                   </span>
                   <span className="tabular-nums">
                     {formatCents(item.lineTotalCents)}

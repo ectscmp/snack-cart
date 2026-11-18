@@ -14,6 +14,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { idleState } from "@/lib/action-state";
 import type { Category, Product } from "@/lib/db";
+import { formatCents } from "@/lib/money";
+import { PRODUCT_OPTION_SETS } from "@/lib/product-options";
 
 export function ProductForm({
   product,
@@ -156,6 +158,27 @@ export function ProductForm({
             placeholder="https://… (optional)"
             maxLength={500}
           />
+        </div>
+
+        <div className="space-y-2 sm:col-span-2">
+          <Label htmlFor={`optionSet-${key}`}>Customer choices</Label>
+          <select
+            id={`optionSet-${key}`}
+            name="optionSet"
+            defaultValue={product?.optionSet ?? ""}
+            className="h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm"
+          >
+            <option value="">No choices</option>
+            {PRODUCT_OPTION_SETS.map((optionSet) => (
+              <option key={optionSet.id} value={optionSet.id}>
+                {optionSet.label}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-muted-foreground">
+            Adds a dropdown to this product on the menu. Coffee syrups add{" "}
+            {formatCents(50)} per syrup.
+          </p>
         </div>
 
         <div className="space-y-2 sm:col-span-2">

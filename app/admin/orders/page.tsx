@@ -87,7 +87,12 @@ async function OrdersContent() {
           <CardContent className="space-y-3">
             <p className="line-clamp-2 text-sm text-muted-foreground">
               {order.items
-                .map((item) => `${item.quantity}× ${item.productName}`)
+                .map(
+                  (item) =>
+                    `${item.quantity}× ${item.productName}${
+                      item.optionLabel ? ` (${item.optionLabel})` : ""
+                    }`,
+                )
                 .join(", ")}
             </p>
             <OrderActions

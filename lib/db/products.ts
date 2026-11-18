@@ -1,6 +1,7 @@
 import { getCategory } from "./categories";
 import { createCategory } from "./categories";
 import { getDb, withTransaction } from "./connection";
+import { normalizeProductOptionSet } from "../product-options";
 import type { InventoryMovement, Product } from "./types";
 
 type ProductRow = {
@@ -16,6 +17,7 @@ type ProductRow = {
   active: number;
   stock_quantity: number;
   low_stock_threshold: number;
+  option_set: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -51,6 +53,7 @@ function toProduct(row: ProductRow): Product {
     active: row.active === 1,
     stockQuantity: row.stock_quantity,
     lowStockThreshold: row.low_stock_threshold,
+    optionSet: row.option_set,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -74,7 +77,7 @@ function toMovement(row: MovementRow): InventoryMovement {
 const productSelect = `
   SELECT p.id, p.name, p.description, p.price_cents, p.category, p.category_id,
          p.image_url, p.active, p.stock_quantity, p.low_stock_threshold,
-         p.created_at, p.updated_at,
+         p.option_set, p.created_at, p.updated_at,
          COALESCE(c.name, p.category) AS category_name,
          parent.name AS category_parent_name
   FROM products p
@@ -114,6 +117,7 @@ export function createProduct(input: {
   active?: boolean;
   stockQuantity: number;
   lowStockThreshold: number;
+  optionSet?: string | null;
   createdBy: string;
 }): Product {
   return withTransaction((database) => {
@@ -127,8 +131,8 @@ export function createProduct(input: {
       .prepare(
         `INSERT INTO products
            (name, description, price_cents, category, category_id, image_url,
-            active, stock_quantity, low_stock_threshold, created_by)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            active, stock_quantity, low_stock_threshold, option_set, created_by)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         input.name,
@@ -140,6 +144,7 @@ export function createProduct(input: {
         input.active === false ? 0 : 1,
         input.stockQuantity,
         input.lowStockThreshold,
+        normalizeProductOptionSet(input.optionSet),
         input.createdBy,
       );
 
@@ -175,6 +180,7 @@ export function updateProduct(
     imageUrl?: string | null;
     active?: boolean;
     lowStockThreshold: number;
+    optionSet?: string | null;
   },
 ): void {
   const category = getCategory(input.categoryId);
@@ -188,7 +194,7 @@ export function updateProduct(
       `UPDATE products
        SET name = ?, description = ?, price_cents = ?, category = ?,
            category_id = ?, image_url = ?, active = ?, low_stock_threshold = ?,
-           updated_at = datetime('now')
+           option_set = ?, updated_at = datetime('now')
        WHERE id = ?`,
     )
     .run(
@@ -200,6 +206,7 @@ export function updateProduct(
       input.imageUrl ?? null,
       input.active === false ? 0 : 1,
       input.lowStockThreshold,
+      normalizeProductOptionSet(input.optionSet),
       id,
     );
 }
@@ -313,6 +320,7 @@ export function createProducts(
     lowStockThreshold?: number | null;
     active?: boolean;
     imageUrl?: string | null;
+    optionSet?: string | null;
     createdBy: string;
   }>,
 ): { created: number; skipped: Array<{ row: number; reason: string }> } {
@@ -357,6 +365,7 @@ export function createProducts(
         active: row.active ?? true,
         stockQuantity: Math.max(0, row.stockQuantity ?? 0),
         lowStockThreshold: Math.max(0, row.lowStockThreshold ?? 5),
+        optionSet: row.optionSet ?? null,
         createdBy: row.createdBy,
       });
 

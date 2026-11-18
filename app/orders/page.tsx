@@ -96,7 +96,14 @@ async function OrdersContent() {
           </CardHeader>
           <CardContent className="flex items-center justify-between gap-3">
             <p className="line-clamp-1 text-sm text-muted-foreground">
-              {order.items.map((item) => `${item.quantity}× ${item.productName}`).join(", ")}
+              {order.items
+                .map(
+                  (item) =>
+                    `${item.quantity}× ${item.productName}${
+                      item.optionLabel ? ` (${item.optionLabel})` : ""
+                    }`,
+                )
+                .join(", ")}
             </p>
             <div className="flex shrink-0 items-center gap-1">
               <Button asChild size="sm" variant="outline">
