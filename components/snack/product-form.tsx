@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { Loader2, PackagePlus, Save } from "lucide-react";
 import { toast } from "sonner";
 
@@ -26,6 +26,10 @@ export function ProductForm({
 }) {
   const action = product ? updateProductAction : createProductAction;
   const [state, formAction, pending] = useActionState(action, idleState);
+  const [optionSetId, setOptionSetId] = useState(product?.optionSet ?? "");
+  const selectedOptionSet = PRODUCT_OPTION_SETS.find(
+    (optionSet) => optionSet.id === optionSetId,
+  );
   const key = product?.id ?? "new";
 
   const parents = categories.filter((entry) => entry.parentId === null);
@@ -165,7 +169,8 @@ export function ProductForm({
           <select
             id={`optionSet-${key}`}
             name="optionSet"
-            defaultValue={product?.optionSet ?? ""}
+            value={optionSetId}
+            onChange={(event) => setOptionSetId(event.target.value)}
             className="h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm"
           >
             <option value="">No choices</option>
@@ -175,10 +180,25 @@ export function ProductForm({
               </option>
             ))}
           </select>
-          <p className="text-xs text-muted-foreground">
-            Adds a dropdown to this product on the menu. Coffee syrups add{" "}
-            {formatCents(50)} per syrup.
-          </p>
+          {selectedOptionSet ? (
+            <div className="rounded-lg border bg-muted/30 px-3 py-2 text-xs">
+              <p className="font-medium">Customer dropdown will show:</p>
+              <ul className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-muted-foreground">
+                {selectedOptionSet.options.map((option) => (
+                  <li key={option.value}>
+                    {option.label}
+                    {option.priceDeltaCents > 0
+                      ? ` (+${formatCents(option.priceDeltaCents)})`
+                      : ""}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              Adds a dropdown to this product on the menu.
+            </p>
+          )}
         </div>
 
         <div className="space-y-2 sm:col-span-2">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
+import Link from "next/link";
 import { Plus, ShoppingBasket } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "cn";
@@ -13,13 +14,17 @@ import type { ProductOptionSet } from "@/lib/product-options";
 
 export function AddToCartButton({
   productId,
-  disabled,
   optionSet,
+  soldOut = false,
+  canOrder = true,
+  orderingOpen = true,
   className,
 }: {
   productId: number;
-  disabled?: boolean;
   optionSet?: ProductOptionSet | null;
+  soldOut?: boolean;
+  canOrder?: boolean;
+  orderingOpen?: boolean;
   className?: string;
 }) {
   const [state, formAction, pending] = useActionState(addToCartAction, idleState);
@@ -38,7 +43,15 @@ export function AddToCartButton({
   const needsChoice = Boolean(optionSet) && !optionValue;
 
   return (
-    <form action={formAction} className={cn("space-y-2", className)}>
+    <form
+      action={formAction}
+      onSubmit={(event) => {
+        if (!canOrder || !orderingOpen) {
+          event.preventDefault();
+        }
+      }}
+      className={cn("space-y-2", className)}
+    >
       <input type="hidden" name="productId" value={productId} />
       <input type="hidden" name="quantity" value={1} />
 
@@ -75,19 +88,35 @@ export function AddToCartButton({
         </div>
       ) : null}
 
-      <Button
-        type="submit"
-        size="sm"
-        disabled={disabled || pending || needsChoice}
-        className="w-full"
-      >
-        {pending ? (
-          <ShoppingBasket className="size-4 animate-pulse" />
-        ) : (
-          <Plus className="size-4" />
-        )}
-        {disabled ? "Sold out" : "Add"}
-      </Button>
+      {!canOrder ? (
+        <Button asChild size="sm" variant="outline" className="w-full">
+          <Link href="/sign-in">Sign in to order</Link>
+        </Button>
+      ) : !orderingOpen ? (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled
+          className="w-full"
+        >
+          Ordering closed
+        </Button>
+      ) : (
+        <Button
+          type="submit"
+          size="sm"
+          disabled={soldOut || pending || needsChoice}
+          className="w-full"
+        >
+          {pending ? (
+            <ShoppingBasket className="size-4 animate-pulse" />
+          ) : (
+            <Plus className="size-4" />
+          )}
+          {soldOut ? "Sold out" : "Add"}
+        </Button>
+      )}
     </form>
   );
 }

@@ -1,9 +1,7 @@
-import Link from "next/link";
 import { ImageIcon } from "lucide-react";
 import { cn } from "cn";
 
 import { AddToCartButton } from "@/components/snack/add-to-cart-button";
-import { Button } from "@/components/ui/button";
 import type { Product } from "@/lib/db";
 import { formatCents } from "@/lib/money";
 import { getProductOptionSet } from "@/lib/product-options";
@@ -89,21 +87,13 @@ export function ProductCard({
                 : `${product.stockQuantity} in stock`}
           </span>
 
-          {!canOrder ? (
-            <Button asChild size="sm" variant="outline">
-              <Link href="/sign-in">Sign in</Link>
-            </Button>
-          ) : !orderingOpen ? (
-            <Button size="sm" variant="outline" disabled>
-              Closed
-            </Button>
-          ) : (
-            <AddToCartButton
-              productId={product.id}
-              disabled={soldOut}
-              optionSet={optionSet}
-            />
-          )}
+          <AddToCartButton
+            productId={product.id}
+            optionSet={optionSet}
+            soldOut={soldOut}
+            canOrder={canOrder}
+            orderingOpen={orderingOpen}
+          />
         </div>
       </div>
     </article>

@@ -98,8 +98,9 @@ async function ProductsContent() {
                     {product.optionSet ? (
                       <p className="text-xs text-muted-foreground">
                         Choices:{" "}
-                        {getProductOptionSet(product.optionSet)?.label ??
-                          product.optionSet}
+                        {getProductOptionSet(product.optionSet)?.options
+                          .map((option) => option.label)
+                          .join(", ") ?? product.optionSet}
                       </p>
                     ) : null}
                   </TableCell>
