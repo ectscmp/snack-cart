@@ -6,8 +6,10 @@ export async function NavLinks() {
 
   const links = [{ href: "/menu", label: "Menu" }];
 
-  links.push({ href: "/orders", label: "My orders" });
-  links.push({ href: "/dashboard", label: "Dashboard" });
+  if (user) {
+    links.push({ href: "/orders", label: "My orders" });
+    links.push({ href: "/dashboard", label: "Dashboard" });
+  }
 
   if (user && isStaff(user)) {
     links.push({ href: "/staff", label: "Delivery" });
