@@ -14,7 +14,7 @@ export function SectionNav({
   const pathname = usePathname();
 
   return (
-    <nav className="flex flex-wrap items-center gap-1 text-sm">
+    <nav className="flex items-center gap-1 overflow-x-auto pb-1 text-sm [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap sm:overflow-visible sm:pb-0">
       {links.map((link) => {
         const active =
           pathname === link.href ||
@@ -26,7 +26,7 @@ export function SectionNav({
             href={link.href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "rounded-md px-2.5 py-1.5 font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+              "shrink-0 whitespace-nowrap rounded-md px-2.5 py-1.5 font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
               active && "bg-muted text-foreground",
             )}
           >

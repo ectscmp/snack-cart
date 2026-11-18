@@ -72,6 +72,17 @@ async function ProductsContent() {
   const products = listProducts(true);
   const categories = listCategories();
   const optionsByProduct = listAllProductOptions();
+  const rows = products.map((product) => {
+    const productOptions = optionsByProduct.get(product.id);
+
+    return {
+      product,
+      optionLabels: [
+        ...(productOptions?.choices ?? []).map((option) => option.label),
+        ...(productOptions?.addons ?? []).map((option) => `+ ${option.label}`),
+      ],
+    };
+  });
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
@@ -81,84 +92,129 @@ async function ProductsContent() {
           <CardDescription>{products.length} products</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Product</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Stock</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {products.map((product) => {
-                const productOptions = optionsByProduct.get(product.id);
-                const optionLabels = [
-                  ...(productOptions?.choices ?? []).map(
-                    (option) => option.label,
-                  ),
-                  ...(productOptions?.addons ?? []).map(
-                    (option) => `+ ${option.label}`,
-                  ),
-                ];
+          {rows.length === 0 ? (
+            <p className="py-10 text-center text-sm text-muted-foreground">
+              No products yet. Add the first one below.
+            </p>
+          ) : (
+            <>
+              <div className="space-y-3 md:hidden">
+                {rows.map(({ product, optionLabels }) => (
+                  <div key={product.id} className="rounded-lg border p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-medium">{product.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {product.categoryPath}
+                        </p>
+                      </div>
+                      <Badge variant="outline">
+                        {product.active ? "Active" : "Hidden"}
+                      </Badge>
+                    </div>
 
-                return (
-                  <TableRow key={product.id}>
-                    <TableCell>
-                      <p className="font-medium">{product.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {product.categoryPath}
-                    </p>
                     {optionLabels.length > 0 ? (
-                      <p className="text-xs text-muted-foreground">
+                      <p className="mt-1 text-xs text-muted-foreground">
                         Options: {optionLabels.join(", ")}
                       </p>
                     ) : null}
-                  </TableCell>
-                  <TableCell>{formatCents(product.priceCents)}</TableCell>
-                  <TableCell>
-                    <span
-                      className={
-                        product.stockQuantity <= product.lowStockThreshold
-                          ? "font-medium text-amber-600"
-                          : undefined
-                      }
-                    >
-                      {product.stockQuantity}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">
-                      {product.active ? "Active" : "Hidden"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center justify-end gap-1">
-                      <Button asChild variant="ghost" size="sm">
-                        <Link href={`/staff/products/${product.id}`}>
-                          <Pencil className="size-4" />
-                          Edit
-                        </Link>
-                      </Button>
-                      <ProductToggle
-                        productId={product.id}
-                        active={product.active}
-                      />
+
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-sm">
+                        <span className="font-medium">
+                          {formatCents(product.priceCents)}
+                        </span>
+                        <span
+                          className={
+                            product.stockQuantity <= product.lowStockThreshold
+                              ? "text-amber-600"
+                              : "text-muted-foreground"
+                          }
+                        >
+                          {" "}
+                          · {product.stockQuantity} in stock
+                        </span>
+                      </p>
+                      <div className="flex items-center gap-1">
+                        <Button asChild variant="outline" size="sm">
+                          <Link href={`/staff/products/${product.id}`}>
+                            <Pencil className="size-4" />
+                            Edit
+                          </Link>
+                        </Button>
+                        <ProductToggle
+                          productId={product.id}
+                          active={product.active}
+                        />
+                      </div>
                     </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-              {products.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
-                    No products yet. Add the first one on the right.
-                  </TableCell>
-                </TableRow>
-              ) : null}
-            </TableBody>
-          </Table>
+                  </div>
+                ))}
+              </div>
+
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Product</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead>Stock</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {rows.map(({ product, optionLabels }) => (
+                      <TableRow key={product.id}>
+                        <TableCell>
+                          <p className="font-medium">{product.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {product.categoryPath}
+                          </p>
+                          {optionLabels.length > 0 ? (
+                            <p className="text-xs text-muted-foreground">
+                              Options: {optionLabels.join(", ")}
+                            </p>
+                          ) : null}
+                        </TableCell>
+                        <TableCell>{formatCents(product.priceCents)}</TableCell>
+                        <TableCell>
+                          <span
+                            className={
+                              product.stockQuantity <= product.lowStockThreshold
+                                ? "font-medium text-amber-600"
+                                : undefined
+                            }
+                          >
+                            {product.stockQuantity}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {product.active ? "Active" : "Hidden"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center justify-end gap-1">
+                            <Button asChild variant="ghost" size="sm">
+                              <Link href={`/staff/products/${product.id}`}>
+                                <Pencil className="size-4" />
+                                Edit
+                              </Link>
+                            </Button>
+                            <ProductToggle
+                              productId={product.id}
+                              active={product.active}
+                            />
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
 

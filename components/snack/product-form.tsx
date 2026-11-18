@@ -179,7 +179,10 @@ export function ProductForm({
     priceName: string,
   ) {
     return rows.map((row) => (
-      <div key={row.key} className="flex items-center gap-2">
+      <div
+        key={row.key}
+        className="grid grid-cols-[minmax(0,1fr)_4.5rem_2.25rem] items-center gap-2"
+      >
         <Input
           name={labelName}
           value={row.label}
@@ -201,7 +204,6 @@ export function ProductForm({
           aria-label={
             kind === "choice" ? "Choice upcharge" : "Add-on upcharge"
           }
-          className="w-24"
         />
         <Button
           type="button"
@@ -361,7 +363,7 @@ export function ProductForm({
               type="button"
               variant="outline"
               size="sm"
-              className="mt-2"
+              className="mt-2 w-full sm:w-auto"
               onClick={() =>
                 setChoices((current) => [
                   ...current,
@@ -392,7 +394,7 @@ export function ProductForm({
               type="button"
               variant="outline"
               size="sm"
-              className="mt-2"
+              className="mt-2 w-full sm:w-auto"
               onClick={() =>
                 setAddons((current) => [
                   ...current,
@@ -405,8 +407,8 @@ export function ProductForm({
             </Button>
           </div>
 
-          <div className="flex flex-wrap items-end gap-2 rounded-lg border border-dashed p-3">
-            <div className="min-w-48 flex-1 space-y-1">
+          <div className="flex flex-col gap-2 rounded-lg border border-dashed p-3 sm:flex-row sm:items-end">
+            <div className="w-full space-y-1 sm:min-w-48 sm:flex-1">
               <Label htmlFor={`preset-${key}`}>Quick fill from a preset</Label>
               <select
                 id={`preset-${key}`}
@@ -425,6 +427,7 @@ export function ProductForm({
             <Button
               type="button"
               variant="outline"
+              className="w-full sm:w-auto"
               onClick={applyPreset}
               disabled={!presetId}
             >

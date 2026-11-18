@@ -24,7 +24,7 @@ export function ProductCard({
 
   return (
     <article className="flex h-full flex-col overflow-hidden rounded-xl border bg-card transition-colors hover:border-foreground/20">
-      <div className="relative aspect-[4/3] border-b bg-muted">
+      <div className="relative aspect-[2/1] border-b bg-muted sm:aspect-[4/3]">
         {product.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img

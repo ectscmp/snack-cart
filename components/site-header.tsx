@@ -41,7 +41,7 @@ export function SiteHeader() {
       </div>
 
       <div className="border-t md:hidden">
-        <div className="mx-auto flex w-full max-w-6xl items-center gap-2 px-4 py-2">
+        <div className="mx-auto flex w-full max-w-6xl items-center gap-2 overflow-x-auto px-4 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <Suspense fallback={<Skeleton className="h-8 w-16" />}>
             <NavLinks />
           </Suspense>
