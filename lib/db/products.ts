@@ -1,8 +1,17 @@
 import { getCategory } from "./categories";
 import { createCategory } from "./categories";
 import { getDb, withTransaction } from "./connection";
-import { normalizeProductOptionSet } from "../product-options";
-import type { InventoryMovement, Product } from "./types";
+import {
+  COFFEE_WHIPPED_CREAM,
+  getProductOptionSet,
+  normalizeProductOptionSet,
+} from "../product-options";
+import { writeProductOptions } from "./product-options";
+import type {
+  InventoryMovement,
+  Product,
+  ProductOptionInput,
+} from "./types";
 
 type ProductRow = {
   id: number;
@@ -18,6 +27,7 @@ type ProductRow = {
   stock_quantity: number;
   low_stock_threshold: number;
   option_set: string | null;
+  option_prompt: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -54,6 +64,7 @@ function toProduct(row: ProductRow): Product {
     stockQuantity: row.stock_quantity,
     lowStockThreshold: row.low_stock_threshold,
     optionSet: row.option_set,
+    optionPrompt: row.option_prompt,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -77,7 +88,7 @@ function toMovement(row: MovementRow): InventoryMovement {
 const productSelect = `
   SELECT p.id, p.name, p.description, p.price_cents, p.category, p.category_id,
          p.image_url, p.active, p.stock_quantity, p.low_stock_threshold,
-         p.option_set, p.created_at, p.updated_at,
+         p.option_set, p.option_prompt, p.created_at, p.updated_at,
          COALESCE(c.name, p.category) AS category_name,
          parent.name AS category_parent_name
   FROM products p
@@ -118,6 +129,11 @@ export function createProduct(input: {
   stockQuantity: number;
   lowStockThreshold: number;
   optionSet?: string | null;
+  optionPrompt?: string | null;
+  options?: {
+    choices: ProductOptionInput[];
+    addons: ProductOptionInput[];
+  };
   createdBy: string;
 }): Product {
   return withTransaction((database) => {
@@ -160,6 +176,41 @@ export function createProduct(input: {
         .run(id, input.stockQuantity, input.createdBy);
     }
 
+    if (input.options) {
+      writeProductOptions(database, id, {
+        prompt: input.optionPrompt ?? null,
+        choices: input.options.choices,
+        addons: input.options.addons,
+      });
+    } else {
+      const preset = getProductOptionSet(input.optionSet);
+
+      if (preset) {
+        writeProductOptions(database, id, {
+          prompt: input.optionPrompt ?? preset.prompt,
+          choices: preset.options.map((option) => ({
+            kind: "choice",
+            label: option.label,
+            priceDeltaCents: option.priceDeltaCents,
+          })),
+          addons:
+            preset.id === "coffee"
+              ? [
+                  {
+                    kind: "addon",
+                    label: COFFEE_WHIPPED_CREAM.label,
+                    priceDeltaCents: COFFEE_WHIPPED_CREAM.priceDeltaCents,
+                  },
+                ]
+              : [],
+        });
+      } else if (input.optionPrompt !== undefined) {
+        database
+          .prepare("UPDATE products SET option_prompt = ? WHERE id = ?")
+          .run(input.optionPrompt || null, id);
+      }
+    }
+
     const created = getProduct(id);
 
     if (!created) {
@@ -180,7 +231,11 @@ export function updateProduct(
     imageUrl?: string | null;
     active?: boolean;
     lowStockThreshold: number;
-    optionSet?: string | null;
+    optionPrompt?: string | null;
+    options?: {
+      choices: ProductOptionInput[];
+      addons: ProductOptionInput[];
+    };
   },
 ): void {
   const category = getCategory(input.categoryId);
@@ -189,26 +244,39 @@ export function updateProduct(
     throw new Error("Pick a category.");
   }
 
-  getDb()
-    .prepare(
-      `UPDATE products
-       SET name = ?, description = ?, price_cents = ?, category = ?,
-           category_id = ?, image_url = ?, active = ?, low_stock_threshold = ?,
-           option_set = ?, updated_at = datetime('now')
-       WHERE id = ?`,
-    )
-    .run(
-      input.name,
-      input.description ?? null,
-      input.priceCents,
-      category.name,
-      category.id,
-      input.imageUrl ?? null,
-      input.active === false ? 0 : 1,
-      input.lowStockThreshold,
-      normalizeProductOptionSet(input.optionSet),
-      id,
-    );
+  withTransaction((database) => {
+    database
+      .prepare(
+        `UPDATE products
+         SET name = ?, description = ?, price_cents = ?, category = ?,
+             category_id = ?, image_url = ?, active = ?, low_stock_threshold = ?,
+             updated_at = datetime('now')
+         WHERE id = ?`,
+      )
+      .run(
+        input.name,
+        input.description ?? null,
+        input.priceCents,
+        category.name,
+        category.id,
+        input.imageUrl ?? null,
+        input.active === false ? 0 : 1,
+        input.lowStockThreshold,
+        id,
+      );
+
+    if (input.options) {
+      writeProductOptions(database, id, {
+        prompt: input.optionPrompt ?? null,
+        choices: input.options.choices,
+        addons: input.options.addons,
+      });
+    } else if (input.optionPrompt !== undefined) {
+      database
+        .prepare("UPDATE products SET option_prompt = ? WHERE id = ?")
+        .run(input.optionPrompt || null, id);
+    }
+  });
 }
 
 export function setProductActive(id: number, active: boolean): void {

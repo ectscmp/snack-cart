@@ -1,5 +1,10 @@
 import type { DatabaseSync } from "node:sqlite";
 
+import {
+  COFFEE_WHIPPED_CREAM,
+  getProductOptionSet,
+} from "../product-options";
+
 /**
  * Idempotent schema setup. Every statement is safe to run on an existing
  * database, and columns added after the first release are handled by
@@ -83,6 +88,17 @@ export function migrate(database: DatabaseSync) {
       created_by TEXT REFERENCES users(id) ON DELETE SET NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS product_options (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+      kind TEXT NOT NULL CHECK (kind IN ('choice', 'addon')),
+      label TEXT NOT NULL,
+      price_delta_cents INTEGER NOT NULL DEFAULT 0
+        CHECK (price_delta_cents >= 0),
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
     CREATE TABLE IF NOT EXISTS carts (
@@ -180,6 +196,8 @@ export function migrate(database: DatabaseSync) {
     CREATE INDEX IF NOT EXISTS users_class_idx ON users (class_id);
     CREATE INDEX IF NOT EXISTS ordering_windows_class_idx ON ordering_windows (class_id, day_of_week);
     CREATE INDEX IF NOT EXISTS products_active_idx ON products (active);
+    CREATE INDEX IF NOT EXISTS product_options_product_idx
+      ON product_options (product_id, kind, sort_order);
     CREATE INDEX IF NOT EXISTS orders_customer_idx ON orders (customer_id);
     CREATE INDEX IF NOT EXISTS orders_status_idx ON orders (status);
     CREATE INDEX IF NOT EXISTS order_items_order_idx ON order_items (order_id);
@@ -227,11 +245,13 @@ export function migrate(database: DatabaseSync) {
 
   // Customer-facing choices (coffee syrups, candy bars, drink flavors).
   ensureColumn(database, "products", "option_set", "TEXT");
+  ensureColumn(database, "products", "option_prompt", "TEXT");
 
   // The chosen option is snapshotted on the cart line so the cart total and
   // the final order keep the upcharge even if staff later change the product.
   ensureCartItemOptions(database);
   ensureColumn(database, "order_items", "option_label", "TEXT NOT NULL DEFAULT ''");
+  backfillProductOptions(database);
 
   // Safe to index now that `parent_id` exists on both new and migrated tables.
   database.exec(`
@@ -250,6 +270,99 @@ export function migrate(database: DatabaseSync) {
   database
     .prepare("INSERT OR IGNORE INTO schema_migrations (version) VALUES (1)")
     .run();
+}
+
+/**
+ * Moves the old hard-coded preset choices into editable product_options rows
+ * once, so staff can add or remove options without a code change.
+ */
+function backfillProductOptions(database: DatabaseSync) {
+  const alreadyBackfilled = database
+    .prepare("SELECT 1 FROM schema_migrations WHERE version = 2")
+    .get();
+
+  if (alreadyBackfilled) {
+    return;
+  }
+
+  const products = database
+    .prepare(
+      `SELECT id, option_set, option_prompt
+       FROM products
+       WHERE option_set IS NOT NULL`,
+    )
+    .all() as Array<{
+    id: number;
+    option_set: string;
+    option_prompt: string | null;
+  }>;
+
+  const count = database.prepare(
+    "SELECT COUNT(*) AS count FROM product_options WHERE product_id = ?",
+  );
+  const insert = database.prepare(
+    `INSERT INTO product_options
+       (product_id, kind, label, price_delta_cents, sort_order)
+     VALUES (?, ?, ?, ?, ?)`,
+  );
+  const setPrompt = database.prepare(
+    "UPDATE products SET option_prompt = ? WHERE id = ?",
+  );
+
+  database.exec("BEGIN IMMEDIATE");
+
+  try {
+    for (const product of products) {
+      const existing = count.get(product.id) as { count: number };
+
+      if (existing.count > 0) {
+        continue;
+      }
+
+      const set = getProductOptionSet(product.option_set);
+
+      if (!set) {
+        continue;
+      }
+
+      set.options.forEach((option, index) => {
+        insert.run(
+          product.id,
+          "choice",
+          option.label,
+          option.priceDeltaCents,
+          index,
+        );
+      });
+
+      if (set.id === "coffee") {
+        insert.run(
+          product.id,
+          "addon",
+          COFFEE_WHIPPED_CREAM.label,
+          COFFEE_WHIPPED_CREAM.priceDeltaCents,
+          0,
+        );
+      }
+
+      if (!product.option_prompt) {
+        setPrompt.run(set.prompt, product.id);
+      }
+    }
+
+    database
+      .prepare("INSERT OR IGNORE INTO schema_migrations (version) VALUES (2)")
+      .run();
+
+    database.exec("COMMIT");
+  } catch (error) {
+    try {
+      database.exec("ROLLBACK");
+    } catch {
+      // The transaction may already be rolled back by SQLite.
+    }
+    throw error;
+  }
 }
 
 /**

@@ -80,10 +80,36 @@ export type Product = {
   active: boolean;
   stockQuantity: number;
   lowStockThreshold: number;
-  /** Id of the customer choice dropdown, or null when the product has none. */
+  /** Id of the legacy preset, or null. New products use `optionPrompt`. */
   optionSet: string | null;
+  /** Label shown above the product's choice dropdown. */
+  optionPrompt: string | null;
   createdAt: string;
   updatedAt: string;
+};
+
+export type ProductOptionKind = "choice" | "addon";
+
+export type ProductOption = {
+  id: number;
+  productId: number;
+  kind: ProductOptionKind;
+  label: string;
+  priceDeltaCents: number;
+  sortOrder: number;
+};
+
+export type ProductOptionInput = {
+  kind: ProductOptionKind;
+  label: string;
+  priceDeltaCents: number;
+  sortOrder?: number;
+};
+
+export type ProductOptions = {
+  prompt: string | null;
+  choices: ProductOption[];
+  addons: ProductOption[];
 };
 
 export type InventoryMovement = {

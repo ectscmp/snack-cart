@@ -33,8 +33,66 @@ const productSchema = z.object({
   categoryId: z.coerce.number().int().positive(),
   imageUrl: z.string().trim().max(500).optional(),
   lowStockThreshold: z.coerce.number().int().min(0).max(100000),
-  optionSet: z.string().trim().max(40).optional(),
+  optionPrompt: z.string().trim().max(80).optional(),
 });
+
+const MAX_OPTIONS_PER_KIND = 50;
+
+function parseOptionRows(
+  kind: "choice" | "addon",
+  labels: string[],
+  prices: string[],
+): { options: Array<{ kind: "choice" | "addon"; label: string; priceDeltaCents: number }> } | { error: string } {
+  const options: Array<{
+    kind: "choice" | "addon";
+    label: string;
+    priceDeltaCents: number;
+  }> = [];
+  const seen = new Set<string>();
+
+  if (labels.length !== prices.length) {
+    return { error: "The menu options changed while saving. Try again." };
+  }
+
+  for (let index = 0; index < labels.length; index += 1) {
+    const label = labels[index].trim();
+
+    if (!label) {
+      continue;
+    }
+
+    if (label.length > 80) {
+      return { error: "Keep each menu option under 80 characters." };
+    }
+
+    const key = label.toLowerCase();
+
+    if (seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+
+    const rawPrice = prices[index]?.trim() ?? "";
+    const priceDeltaCents = rawPrice === "" ? 0 : parsePriceToCents(rawPrice);
+
+    if (priceDeltaCents === null) {
+      return {
+        error: `Enter an upcharge for "${label}" like 0.50, or leave it blank.`,
+      };
+    }
+
+    options.push({ kind, label, priceDeltaCents });
+  }
+
+  if (options.length > MAX_OPTIONS_PER_KIND) {
+    return {
+      error: `Keep it to ${MAX_OPTIONS_PER_KIND} menu options or fewer.`,
+    };
+  }
+
+  return { options };
+}
 
 async function readProductForm(formData: FormData) {
   const parsed = productSchema.safeParse({
@@ -44,7 +102,7 @@ async function readProductForm(formData: FormData) {
     categoryId: formData.get("categoryId"),
     imageUrl: formData.get("imageUrl") ?? undefined,
     lowStockThreshold: formData.get("lowStockThreshold") ?? 5,
-    optionSet: formData.get("optionSet") ?? undefined,
+    optionPrompt: formData.get("optionPrompt") ?? undefined,
   });
 
   if (!parsed.success) {
@@ -82,6 +140,26 @@ async function readProductForm(formData: FormData) {
     imageUrl = `data:${imageFile.type};base64,${buffer.toString("base64")}`;
   }
 
+  const choices = parseOptionRows(
+    "choice",
+    formData.getAll("choiceLabel").map((value) => String(value)),
+    formData.getAll("choicePrice").map((value) => String(value)),
+  );
+
+  if ("error" in choices) {
+    return { error: choices.error } as const;
+  }
+
+  const addons = parseOptionRows(
+    "addon",
+    formData.getAll("addonLabel").map((value) => String(value)),
+    formData.getAll("addonPrice").map((value) => String(value)),
+  );
+
+  if ("error" in addons) {
+    return { error: addons.error } as const;
+  }
+
   return {
     data: {
       name: parsed.data.name,
@@ -90,7 +168,11 @@ async function readProductForm(formData: FormData) {
       categoryId: category.id,
       imageUrl,
       lowStockThreshold: parsed.data.lowStockThreshold,
-      optionSet: normalizeProductOptionSet(parsed.data.optionSet),
+      optionPrompt: parsed.data.optionPrompt || null,
+      options: {
+        choices: choices.options,
+        addons: addons.options,
+      },
     },
   } as const;
 }

@@ -10,31 +10,36 @@ import { addToCartAction } from "@/app/actions/cart";
 import { Button } from "@/components/ui/button";
 import { idleState } from "@/lib/action-state";
 import { formatCents } from "@/lib/money";
-import {
-  COFFEE_WHIPPED_CREAM,
-  type ProductOptionSet,
-} from "@/lib/product-options";
+import type { ProductOption } from "@/lib/db";
 
 export function AddToCartButton({
   productId,
-  optionSet,
+  choices = [],
+  addons = [],
+  prompt,
   soldOut = false,
   canOrder = true,
   orderingOpen = true,
   className,
 }: {
   productId: number;
-  optionSet?: ProductOptionSet | null;
+  choices?: ProductOption[];
+  addons?: ProductOption[];
+  prompt?: string | null;
   soldOut?: boolean;
   canOrder?: boolean;
   orderingOpen?: boolean;
   className?: string;
 }) {
   const [state, formAction, pending] = useActionState(addToCartAction, idleState);
-  const [optionValue, setOptionValue] = useState(
-    optionSet?.options.find((option) => option.value === "none")?.value ?? "",
+  const [choiceValue, setChoiceValue] = useState(
+    () =>
+      choices
+        .find((choice) => choice.label.trim().toLowerCase().startsWith("no "))
+        ?.id.toString() ?? "",
   );
-  const [whippedCream, setWhippedCream] = useState(false);
+  const [selectedAddons, setSelectedAddons] = useState<number[]>([]);
+  const dropdownLabel = prompt || "Choose an option";
 
   useEffect(() => {
     if (state.status === "success") {
@@ -44,7 +49,15 @@ export function AddToCartButton({
     }
   }, [state]);
 
-  const needsChoice = Boolean(optionSet) && !optionValue;
+  const needsChoice = choices.length > 0 && !choiceValue;
+
+  function toggleAddon(id: number, checked: boolean) {
+    setSelectedAddons((current) =>
+      checked
+        ? Array.from(new Set([...current, id]))
+        : current.filter((entry) => entry !== id),
+    );
+  }
 
   return (
     <form
@@ -59,32 +72,30 @@ export function AddToCartButton({
       <input type="hidden" name="productId" value={productId} />
       <input type="hidden" name="quantity" value={1} />
 
-      {optionSet ? (
+      {choices.length > 0 ? (
         <div className="space-y-1">
           <label
             htmlFor={`option-${productId}`}
             className="text-xs text-muted-foreground"
           >
-            {optionSet.prompt}
+            {dropdownLabel}
           </label>
           <select
             id={`option-${productId}`}
             name="optionValue"
-            value={optionValue}
-            onChange={(event) => setOptionValue(event.target.value)}
+            value={choiceValue}
+            onChange={(event) => setChoiceValue(event.target.value)}
             className="h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm"
             required
           >
-            {!optionSet.options.some((option) => option.value === "none") ? (
-              <option value="" disabled>
-                {optionSet.prompt}…
-              </option>
-            ) : null}
-            {optionSet.options.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-                {option.priceDeltaCents > 0
-                  ? ` (+${formatCents(option.priceDeltaCents)})`
+            <option value="" disabled>
+              {dropdownLabel}…
+            </option>
+            {choices.map((choice) => (
+              <option key={choice.id} value={choice.id}>
+                {choice.label}
+                {choice.priceDeltaCents > 0
+                  ? ` (+${formatCents(choice.priceDeltaCents)})`
                   : ""}
               </option>
             ))}
@@ -92,20 +103,28 @@ export function AddToCartButton({
         </div>
       ) : null}
 
-      {optionSet?.id === "coffee" ? (
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            name="whippedCream"
-            checked={whippedCream}
-            onChange={(event) => setWhippedCream(event.target.checked)}
-            className="size-4 rounded border"
-          />
-          Add {COFFEE_WHIPPED_CREAM.label.toLowerCase()}
-          {COFFEE_WHIPPED_CREAM.priceDeltaCents > 0
-            ? ` (+${formatCents(COFFEE_WHIPPED_CREAM.priceDeltaCents)})`
-            : ""}
-        </label>
+      {addons.length > 0 ? (
+        <fieldset className="space-y-1">
+          <legend className="text-xs text-muted-foreground">Add-ons</legend>
+          {addons.map((addon) => (
+            <label key={addon.id} className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="addonId"
+                value={addon.id}
+                checked={selectedAddons.includes(addon.id)}
+                onChange={(event) =>
+                  toggleAddon(addon.id, event.target.checked)
+                }
+                className="size-4 rounded border"
+              />
+              {addon.label}
+              {addon.priceDeltaCents > 0
+                ? ` (+${formatCents(addon.priceDeltaCents)})`
+                : ""}
+            </label>
+          ))}
+        </fieldset>
       ) : null}
 
       {!canOrder ? (

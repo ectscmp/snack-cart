@@ -14,7 +14,7 @@ import type { ActionState } from "@/lib/action-state";
 
 const productIdSchema = z.coerce.number().int().positive();
 const quantitySchema = z.coerce.number().int().min(0).max(99);
-const optionValueSchema = z.string().trim().max(60).optional();
+const optionValueSchema = z.string().trim().max(200).optional();
 
 export async function addToCartAction(
   _previousState: ActionState,
@@ -31,10 +31,19 @@ export async function addToCartAction(
     return { status: "error", message: "That snack could not be added." };
   }
 
+  const addonIds = formData
+    .getAll("addonId")
+    .map((value) => String(value))
+    .filter(Boolean);
+
   try {
-    addToCart(user.id, productId.data, quantity.data || 1, optionValue.data, {
-      whippedCream: formData.get("whippedCream") === "on",
-    });
+    addToCart(
+      user.id,
+      productId.data,
+      quantity.data || 1,
+      optionValue.data,
+      addonIds,
+    );
   } catch (error) {
     return {
       status: "error",

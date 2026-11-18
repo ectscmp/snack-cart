@@ -114,19 +114,6 @@ export const COFFEE_WHIPPED_CREAM: ProductOptionValue = {
   priceDeltaCents: 0,
 };
 
-export function addWhippedCream(
-  option: ProductOptionValue,
-): ProductOptionValue {
-  return {
-    value: `${option.value}+${COFFEE_WHIPPED_CREAM.value}`,
-    label:
-      option.value === "none"
-        ? COFFEE_WHIPPED_CREAM.label
-        : `${option.label} + ${COFFEE_WHIPPED_CREAM.label}`,
-    priceDeltaCents: option.priceDeltaCents + COFFEE_WHIPPED_CREAM.priceDeltaCents,
-  };
-}
-
 export function getProductOptionSet(
   id: string | null | undefined,
 ): ProductOptionSet | null {
@@ -155,17 +142,4 @@ export function normalizeProductOptionSet(value: string | null | undefined): str
   );
 
   return match?.id ?? null;
-}
-
-export function findProductOption(
-  optionSetId: string | null | undefined,
-  value: string | null | undefined,
-): ProductOptionValue | null {
-  const set = getProductOptionSet(optionSetId);
-
-  if (!set || !value) {
-    return null;
-  }
-
-  return set.options.find((option) => option.value === value) ?? null;
 }

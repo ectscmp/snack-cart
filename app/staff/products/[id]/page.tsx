@@ -24,6 +24,7 @@ import {
   getProduct,
   listCategories,
   listInventoryMovements,
+  listProductOptions,
 } from "@/lib/db";
 import { formatCents } from "@/lib/money";
 
@@ -69,6 +70,7 @@ async function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
 
   const movements = listInventoryMovements(20, product.id);
   const categories = listCategories();
+  const options = listProductOptions(product.id);
 
   return (
     <>
@@ -91,7 +93,11 @@ async function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ProductForm product={product} categories={categories} />
+            <ProductForm
+              product={product}
+              categories={categories}
+              options={options}
+            />
           </CardContent>
         </Card>
 

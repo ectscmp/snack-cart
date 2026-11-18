@@ -3,7 +3,11 @@ import { PackageOpen } from "lucide-react";
 
 import { ProductCard } from "@/components/snack/product-card";
 import { getCurrentUser } from "@/lib/auth";
-import { getOrderingStatus, listProducts } from "@/lib/db";
+import {
+  getOrderingStatus,
+  listAllProductOptions,
+  listProducts,
+} from "@/lib/db";
 
 export async function ProductList({
   limit,
@@ -17,6 +21,7 @@ export async function ProductList({
   const user = await getCurrentUser();
   const status = user ? getOrderingStatus(user) : null;
   const products = listProducts();
+  const optionsByProduct = listAllProductOptions();
 
   if (products.length === 0) {
     return (
@@ -37,14 +42,20 @@ export async function ProductList({
   if (!grouped) {
     return (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {visible.map((product) => (
-          <ProductCard
-            key={product.id}
-            product={product}
-            canOrder={Boolean(user)}
-            orderingOpen={Boolean(status?.open)}
-          />
-        ))}
+        {visible.map((product) => {
+          const options = optionsByProduct.get(product.id);
+
+          return (
+            <ProductCard
+              key={product.id}
+              product={product}
+              choices={options?.choices ?? []}
+              addons={options?.addons ?? []}
+              canOrder={Boolean(user)}
+              orderingOpen={Boolean(status?.open)}
+            />
+          );
+        })}
       </div>
     );
   }
@@ -70,14 +81,20 @@ export async function ProductList({
               </span>
             </div>
             <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {categoryProducts.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  canOrder={Boolean(user)}
-                  orderingOpen={Boolean(status?.open)}
-                />
-              ))}
+              {categoryProducts.map((product) => {
+                const options = optionsByProduct.get(product.id);
+
+                return (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    choices={options?.choices ?? []}
+                    addons={options?.addons ?? []}
+                    canOrder={Boolean(user)}
+                    orderingOpen={Boolean(status?.open)}
+                  />
+                );
+              })}
             </div>
           </section>
         );

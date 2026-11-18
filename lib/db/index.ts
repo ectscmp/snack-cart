@@ -5,6 +5,7 @@ export * from "./classes";
 export * from "./categories";
 export * from "./schedule";
 export * from "./products";
+export * from "./product-options";
 export * from "./cart";
 export * from "./orders";
 export * from "./settings";

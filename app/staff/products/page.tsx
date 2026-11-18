@@ -29,9 +29,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { requireStaff } from "@/lib/auth";
-import { listCategories, listProducts } from "@/lib/db";
+import {
+  listAllProductOptions,
+  listCategories,
+  listProducts,
+} from "@/lib/db";
 import { formatCents } from "@/lib/money";
-import { getProductOptionSet } from "@/lib/product-options";
 
 export const metadata: Metadata = {
   title: "Products",
@@ -68,6 +71,7 @@ async function ProductsContent() {
   await requireStaff();
   const products = listProducts(true);
   const categories = listCategories();
+  const optionsByProduct = listAllProductOptions();
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
@@ -88,19 +92,27 @@ async function ProductsContent() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {products.map((product) => (
-                <TableRow key={product.id}>
-                  <TableCell>
-                    <p className="font-medium">{product.name}</p>
+              {products.map((product) => {
+                const productOptions = optionsByProduct.get(product.id);
+                const optionLabels = [
+                  ...(productOptions?.choices ?? []).map(
+                    (option) => option.label,
+                  ),
+                  ...(productOptions?.addons ?? []).map(
+                    (option) => `+ ${option.label}`,
+                  ),
+                ];
+
+                return (
+                  <TableRow key={product.id}>
+                    <TableCell>
+                      <p className="font-medium">{product.name}</p>
                     <p className="text-xs text-muted-foreground">
                       {product.categoryPath}
                     </p>
-                    {product.optionSet ? (
+                    {optionLabels.length > 0 ? (
                       <p className="text-xs text-muted-foreground">
-                        Options:{" "}
-                        {getProductOptionSet(product.optionSet)?.options
-                          .map((option) => option.label)
-                          .join(", ") ?? product.optionSet}
+                        Options: {optionLabels.join(", ")}
                       </p>
                     ) : null}
                   </TableCell>
@@ -134,9 +146,10 @@ async function ProductsContent() {
                         active={product.active}
                       />
                     </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
               {products.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">

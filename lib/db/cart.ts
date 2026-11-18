@@ -1,10 +1,5 @@
 import { getDb } from "./connection";
-import {
-  addWhippedCream,
-  findProductOption,
-  getProductOptionSet,
-} from "../product-options";
-import type { Cart, CartLine } from "./types";
+import type { Cart, CartLine, ProductOption, ProductOptionKind } from "./types";
 
 type CartRow = {
   product_id: number;
@@ -24,33 +19,88 @@ type ResolvedOption = {
   priceDeltaCents: number;
 };
 
-const NO_OPTION: ResolvedOption = {
-  value: "",
-  label: "",
-  priceDeltaCents: 0,
+type ProductOptionRow = {
+  id: number;
+  kind: ProductOptionKind;
+  label: string;
+  price_delta_cents: number;
 };
 
+function toProductOption(row: ProductOptionRow): ProductOption {
+  return {
+    id: row.id,
+    productId: 0,
+    kind: row.kind,
+    label: row.label,
+    priceDeltaCents: row.price_delta_cents,
+    sortOrder: 0,
+  };
+}
+
 function resolveCartOption(
-  optionSet: string | null,
-  optionValue: string | null | undefined,
+  database: ReturnType<typeof getDb>,
+  productId: number,
+  optionPrompt: string | null,
+  choiceValue: string | null | undefined,
+  addonValues: string[],
 ): ResolvedOption {
-  const set = getProductOptionSet(optionSet);
+  const rows = database
+    .prepare(
+      `SELECT id, kind, label, price_delta_cents
+       FROM product_options
+       WHERE product_id = ?
+       ORDER BY kind, sort_order, id`,
+    )
+    .all(productId) as ProductOptionRow[];
 
-  if (!set) {
-    return NO_OPTION;
+  const choices = rows
+    .filter((row) => row.kind === "choice")
+    .map(toProductOption);
+  const addons = rows
+    .filter((row) => row.kind === "addon")
+    .map(toProductOption);
+
+  let choice: ProductOption | null = null;
+
+  if (choices.length > 0) {
+    const parsed = Number(choiceValue);
+    choice = choices.find((entry) => entry.id === parsed) ?? null;
+
+    if (!choice) {
+      throw new Error(optionPrompt ? `${optionPrompt}.` : "Choose an option.");
+    }
   }
 
-  const fallback = set.options.find((option) => option.value === "none")?.value;
-  const option = findProductOption(set.id, optionValue?.trim() || fallback);
+  const addonIds = new Set(
+    addonValues
+      .map((value) => Number(value))
+      .filter((value) => Number.isInteger(value) && value > 0),
+  );
+  const selectedAddons = addons.filter((addon) => addonIds.has(addon.id));
 
-  if (!option) {
-    throw new Error(`Choose a ${set.choiceLabel}.`);
+  if (selectedAddons.length !== addonIds.size) {
+    throw new Error("One of those add-ons is not available.");
   }
+
+  const valueParts = [
+    choice ? `c${choice.id}` : "",
+    ...selectedAddons.map((addon) => `a${addon.id}`),
+  ].filter(Boolean);
+
+  const labels = [
+    choice?.label,
+    ...selectedAddons.map((addon) => addon.label),
+  ].filter(Boolean);
 
   return {
-    value: option.value,
-    label: option.label,
-    priceDeltaCents: option.priceDeltaCents,
+    value: valueParts.join("|"),
+    label: labels.join(" + "),
+    priceDeltaCents:
+      (choice?.priceDeltaCents ?? 0) +
+      selectedAddons.reduce(
+        (total, addon) => total + addon.priceDeltaCents,
+        0,
+      ),
   };
 }
 
@@ -113,18 +163,22 @@ export function addToCart(
   userId: string,
   productId: number,
   quantity: number,
-  optionValue?: string | null,
-  addons?: { whippedCream?: boolean },
+  choiceValue?: string | null,
+  addonValues: string[] = [],
 ): void {
   const database = getDb();
   ensureCart(userId);
 
   const product = database
     .prepare(
-      "SELECT stock_quantity, active, option_set FROM products WHERE id = ?",
+      "SELECT stock_quantity, active, option_prompt FROM products WHERE id = ?",
     )
     .get(productId) as
-    | { stock_quantity: number; active: number; option_set: string | null }
+    | {
+        stock_quantity: number;
+        active: number;
+        option_prompt: string | null;
+      }
     | undefined;
 
   if (!product || product.active !== 1) {
@@ -135,11 +189,13 @@ export function addToCart(
     throw new Error("That snack is sold out.");
   }
 
-  let option = resolveCartOption(product.option_set, optionValue);
-
-  if (addons?.whippedCream && product.option_set === "coffee") {
-    option = addWhippedCream(option);
-  }
+  const option = resolveCartOption(
+    database,
+    productId,
+    product.option_prompt,
+    choiceValue,
+    addonValues,
+  );
 
   const requested = Math.max(1, quantity);
 
